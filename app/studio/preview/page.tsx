@@ -14,6 +14,7 @@ export default function PreviewPage() {
   const [exportPages, setExportPages] = useState<GeneratedManga[]>([]);
   const [loading, setLoading] = useState(true);
   const [showSessionPicker, setShowSessionPicker] = useState(false);
+  const [pdfQuality, setPdfQuality] = useState<'high' | 'low'>('high');
 
   useEffect(() => {
     document.body.style.overflow = 'auto';
@@ -93,6 +94,23 @@ export default function PreviewPage() {
     setExportPages(updatedSession.pages.filter(p => p.markedForExport));
   };
 
+  const resizeImage = (img: HTMLImageElement, quality: 'high' | 'low'): string => {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return img.src;
+
+    // Low quality: reduce to 60% size
+    const scale = quality === 'low' ? 0.6 : 1.0;
+    canvas.width = img.width * scale;
+    canvas.height = img.height * scale;
+
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+    // Low quality: use lower JPEG quality
+    const jpegQuality = quality === 'low' ? 0.7 : 0.95;
+    return canvas.toDataURL('image/jpeg', jpegQuality);
+  };
+
   const downloadPDF = async () => {
     if (exportPages.length === 0) return;
 
@@ -101,7 +119,8 @@ export default function PreviewPage() {
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
-        format: 'a4'
+        format: 'a4',
+        compress: pdfQuality === 'low'
       });
 
       for (let i = 0; i < exportPages.length; i++) {
@@ -117,17 +136,19 @@ export default function PreviewPage() {
         await new Promise((resolve, reject) => {
           img.onload = () => {
             try {
+              // Resize image if low quality selected
+              const processedSrc = pdfQuality === 'low' ? resizeImage(img, 'low') : img.src;
+
               const imgWidth = 210;
               const pageHeight = 297;
               const imgHeight = (img.height * imgWidth) / img.width;
-              let heightLeft = imgHeight;
               let position = 0;
 
               if (imgHeight <= pageHeight) {
                 position = (pageHeight - imgHeight) / 2;
-                pdf.addImage(img, 'PNG', 0, position, imgWidth, imgHeight);
+                pdf.addImage(processedSrc, 'JPEG', 0, position, imgWidth, imgHeight, undefined, pdfQuality === 'low' ? 'FAST' : 'SLOW');
               } else {
-                pdf.addImage(img, 'PNG', 0, 0, imgWidth, imgHeight);
+                pdf.addImage(processedSrc, 'JPEG', 0, 0, imgWidth, imgHeight, undefined, pdfQuality === 'low' ? 'FAST' : 'SLOW');
               }
 
               resolve(true);
@@ -140,9 +161,10 @@ export default function PreviewPage() {
         });
       }
 
+      const qualitySuffix = pdfQuality === 'low' ? '_compressed' : '';
       const fileName = currentSession
-        ? `${currentSession.name.replace(/[^a-z0-9]/gi, '_')}.pdf`
-        : 'manga.pdf';
+        ? `${currentSession.name.replace(/[^a-z0-9]/gi, '_')}${qualitySuffix}.pdf`
+        : `manga${qualitySuffix}.pdf`;
 
       pdf.save(fileName);
     } catch (error) {
@@ -180,7 +202,7 @@ export default function PreviewPage() {
                 {exportPages.length} marked for PDF ✓
               </p>
             </div>
-            <div className="flex gap-3 flex-wrap">
+            <div className="flex gap-3 flex-wrap items-center">
               <button
                 onClick={() => setShowSessionPicker(true)}
                 className="px-6 py-3 bg-blue-500 text-white rounded-xl font-manga font-bold shadow-lg hover:bg-blue-400 transition-all flex items-center gap-2"
@@ -188,11 +210,35 @@ export default function PreviewPage() {
                 <Plus size={20} />
                 ADD FROM OTHER SESSIONS
               </button>
+
+              {/* PDF Quality Selector */}
+              <div className="flex items-center gap-2 px-4 py-2 bg-zinc-100 rounded-xl border border-zinc-300">
+                <span className="text-xs font-manga text-zinc-600">PDF Quality:</span>
+                <button
+                  onClick={() => setPdfQuality('high')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${pdfQuality === 'high'
+                      ? 'bg-green-500 text-white shadow-lg'
+                      : 'bg-white text-zinc-600 hover:bg-zinc-50'
+                    }`}
+                >
+                  HIGH
+                </button>
+                <button
+                  onClick={() => setPdfQuality('low')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${pdfQuality === 'low'
+                      ? 'bg-blue-500 text-white shadow-lg'
+                      : 'bg-white text-zinc-600 hover:bg-zinc-50'
+                    }`}
+                >
+                  LOW
+                </button>
+              </div>
+
               <button
                 onClick={downloadPDF}
                 className="px-8 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-manga font-bold shadow-lg hover:from-green-600 hover:to-emerald-600 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={exportPages.length === 0 || loading}
-                title={exportPages.length === 0 ? 'No pages marked for export' : `Download ${exportPages.length} pages as PDF`}
+                title={exportPages.length === 0 ? 'No pages marked for export' : `Download ${exportPages.length} pages as PDF (${pdfQuality.toUpperCase()} quality)`}
               >
                 <Download size={20} />
                 <span>{loading ? 'GENERATING...' : `DOWNLOAD PDF (${exportPages.length})`}</span>
