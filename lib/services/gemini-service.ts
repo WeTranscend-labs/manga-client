@@ -2,12 +2,144 @@ import { GoogleGenAI } from "@google/genai";
 import { MANGA_SYSTEM_INSTRUCTION, LAYOUT_PROMPTS } from "@/lib/constants";
 import { MangaConfig, GeneratedManga } from "@/lib/types";
 
+// Generate next prompt based on previous pages
+export const generateNextPrompt = async (
+  sessionHistory: GeneratedManga[],
+  context: string,
+  originalPrompt: string,
+  pageNumber: number,
+  totalPages: number
+): Promise<string> => {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || 'AIzaSyDFbFT3W4yQ_Ad8I1CLz80otq7uJ7gf4_4' });
+  
+  // Prepare previous pages info
+  let previousPagesInfo = '';
+  const recentPages = sessionHistory.slice(-3);
+  recentPages.forEach((page, idx) => {
+    previousPagesInfo += `\nPage ${sessionHistory.length - recentPages.length + idx + 1}: ${page.prompt}\n`;
+  });
+  
+  const promptGenerationRequest = `You are a professional manga story writer. Your task is to generate the NEXT scene prompt for a manga page.
+
+CONTEXT:
+${context}
+
+ORIGINAL STORY DIRECTION:
+${originalPrompt}
+
+PREVIOUS PAGES:
+${previousPagesInfo}
+
+CURRENT STATUS:
+- You are creating the prompt for PAGE ${pageNumber} of ${totalPages}
+- This is a continuation of the story from the previous page(s)
+
+YOUR TASK:
+Analyze what happened in the previous pages and write a SHORT, CLEAR prompt (2-3 sentences) describing what should happen NEXT in the story.
+
+The prompt should:
+1. Continue naturally from the previous scene
+2. Advance the story forward
+3. Be specific about the scene, characters, and action
+4. Maintain story pacing appropriate for page ${pageNumber}/${totalPages}
+5. Build towards climax if approaching the end
+
+IMPORTANT: Write ONLY the prompt text (2-3 sentences), nothing else. No explanations, no meta-commentary.
+
+Example format:
+"The hero realizes his mistake and rushes back to the village. Enemies are attacking from all sides. He must protect the villagers with his newfound power."
+
+Now generate the prompt for page ${pageNumber}:`;
+
+  try {
+    // Prepare content parts with text and reference images
+    const contentParts: any[] = [{ text: promptGenerationRequest }];
+    
+    // Add previous manga pages as visual references
+    if (sessionHistory && sessionHistory.length > 0) {
+      const recentPageImages = sessionHistory.slice(-2); // Last 2 pages for visual reference
+      
+      for (const page of recentPageImages) {
+        if (page.url) {
+          const base64Data = page.url.includes('base64,') 
+            ? page.url.split('base64,')[1] 
+            : page.url;
+          
+          let mimeType = 'image/jpeg';
+          if (page.url.includes('data:image/')) {
+            const mimeMatch = page.url.match(/data:(image\/[^;]+)/);
+            if (mimeMatch) {
+              mimeType = mimeMatch[1];
+            }
+          }
+          
+          contentParts.push({
+            inlineData: {
+              data: base64Data,
+              mimeType: mimeType
+            }
+          });
+        }
+      }
+    }
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.0-flash-exp',
+      contents: {
+        parts: contentParts
+      }
+    });
+
+    const generatedPrompt = response.text?.trim() || '';
+    return generatedPrompt;
+  } catch (error) {
+    console.error("Error generating next prompt:", error);
+    // Fallback: generate a simple continuation
+    return `Continue the story naturally from page ${pageNumber - 1}. Show what happens next.`;
+  }
+};
+
 export const generateMangaImage = async (
   prompt: string,
   config: MangaConfig,
   sessionHistory?: GeneratedManga[]
 ): Promise<string> => {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || 'AIzaSyDFbFT3W4yQ_Ad8I1CLz80otq7uJ7gf4_4' });
+  
+  // Auto-continue story logic
+  let actualPrompt = prompt;
+  let isBatchContinuation = false;
+  
+  if (config.autoContinueStory && sessionHistory && sessionHistory.length > 0) {
+    // Check if this is a batch continuation (prompt contains "Continue the story naturally from page")
+    isBatchContinuation = prompt.includes('Continue the story naturally from page');
+    
+    if (isBatchContinuation) {
+      const pageMatch = prompt.match(/page (\d+)\. This is page (\d+) of (\d+)/);
+      if (pageMatch) {
+        const currentPage = parseInt(pageMatch[2]);
+        const totalPages = parseInt(pageMatch[3]);
+        actualPrompt = `📖 BATCH STORY CONTINUATION (Page ${currentPage}/${totalPages}):
+        
+You are creating page ${currentPage} in a ${totalPages}-page manga sequence. This is an AUTOMATIC story continuation.
+
+INSTRUCTIONS:
+• Carefully analyze ALL previous pages (especially the most recent one)
+• Create the NEXT scene that logically follows from what just happened
+• Advance the story forward naturally - what happens next?
+• Maintain story pacing appropriate for page ${currentPage} of ${totalPages}
+• Build towards a climax if approaching page ${totalPages}
+• Keep the narrative flowing smoothly between pages
+• You have full creative freedom to develop the story in an engaging way
+
+Create the next scene that continues this manga story naturally.`;
+      }
+    } else if (!prompt || prompt.trim() === '' || prompt === 'Continue the story naturally') {
+      actualPrompt = `Automatically continue the story from the previous scene. Analyze what just happened in the previous page(s) and create the next logical scene that flows naturally. You have full creative freedom to advance the narrative in a compelling way.`;
+    } else {
+      actualPrompt = `Continue the story naturally from the previous scene, moving toward this direction: "${prompt}". Create the next scene that follows smoothly from what happened before while incorporating this story direction.`;
+    }
+  }
   
   let continuityInstructions = '';
   
@@ -24,12 +156,30 @@ export const generateMangaImage = async (
     continuityInstructions += `📖 STORY CONTINUITY (This is page ${sessionHistory.length + 1} of an ongoing story):\n`;
     continuityInstructions += `═══════════════════════════════════════════════════════════\n`;
     
-    const recentPages = sessionHistory.slice(-3);
+    const recentPages = sessionHistory.slice(-5); // Show more context for batch
+    continuityInstructions += `\n📚 PREVIOUS PAGES SUMMARY:\n`;
     recentPages.forEach((page, idx) => {
-      continuityInstructions += `\nPage ${sessionHistory.length - recentPages.length + idx + 1}: "${page.prompt}"\n`;
+      const pageNum = sessionHistory.length - recentPages.length + idx + 1;
+      const isAutoContinued = page.prompt.includes('[Auto-continued');
+      continuityInstructions += `\nPage ${pageNum}: ${isAutoContinued ? '(Auto-continued scene)' : `"${page.prompt}"`}\n`;
     });
     
-    continuityInstructions += `\n🎯 CONSISTENCY REQUIREMENTS:\n`;
+    if (config.autoContinueStory || isBatchContinuation) {
+      continuityInstructions += `\n🔄 ${isBatchContinuation ? 'BATCH' : 'AUTO'}-CONTINUATION INSTRUCTIONS:\n`;
+      continuityInstructions += `✓ CRITICAL: Study the LAST page (page ${sessionHistory.length}) carefully - what just happened?\n`;
+      continuityInstructions += `✓ Create the NEXT scene that logically and naturally follows from that moment\n`;
+      continuityInstructions += `✓ Advance the story forward - show what happens immediately next\n`;
+      continuityInstructions += `✓ Think like a mangaka: What would the next page show?\n`;
+      continuityInstructions += `✓ Maintain story pacing and dramatic flow appropriate for page ${sessionHistory.length + 1}\n`;
+      continuityInstructions += `✓ You can introduce new story elements, actions, dialogue naturally\n`;
+      continuityInstructions += `✓ Show character reactions, consequences, or next actions\n`;
+      if (isBatchContinuation) {
+        continuityInstructions += `✓ This is part of a batch sequence - ensure smooth progression\n`;
+      }
+      continuityInstructions += `\n`;
+    }
+    
+    continuityInstructions += `\n🎯 VISUAL CONSISTENCY REQUIREMENTS:\n`;
     continuityInstructions += `✓ Characters MUST look IDENTICAL to previous pages (same face, hair, eyes, body, clothes)\n`;
     continuityInstructions += `✓ Maintain the SAME art style, line weight, and visual aesthetic\n`;
     continuityInstructions += `✓ Continue the same ${config.style} style and ${config.inking} inking technique\n`;
@@ -111,19 +261,82 @@ ${config.dialogueDensity === 'Heavy Dialogue' ? '✓ Include narration boxes for
     }
   }
 
+  // Enhanced style descriptions
+  const getStyleDescription = (style: string) => {
+    const styleGuides: Record<string, string> = {
+      'Modern Webtoon': 'Korean webtoon style with vibrant colors, dramatic lighting, glossy rendering, soft shadows, and cinematic atmosphere',
+      'Korean Manhwa': 'Korean manhwa style with detailed facial features, realistic proportions, dynamic lighting, semi-realistic rendering',
+      'Digital Painting': 'Fully painted digital art style with painterly brushstrokes, rich colors, atmospheric lighting, and textured rendering',
+      'Realistic Manga': 'Realistic proportions and anatomy with manga aesthetics, detailed shading, lifelike facial features',
+      'Clean Line Art': 'Crisp, clean lines with minimal detail, modern aesthetic, smooth curves, professional vector-like quality',
+      'Cinematic Style': 'Movie-like composition with dramatic camera angles, cinematic lighting, depth of field effects, atmospheric rendering',
+      'Semi-Realistic': 'Balance between anime/manga and realistic art, detailed features with stylized expressions',
+      'Shonen': 'Dynamic action-focused style with bold lines, intense expressions, and energetic compositions',
+      'Shoujo': 'Elegant style with soft lines, beautiful characters, decorative elements, and emotional expressions',
+      'Seinen': 'Mature, detailed style with realistic proportions, complex shading, and sophisticated compositions',
+      'Josei': 'Refined adult-oriented style with realistic characters, subtle emotions, and elegant linework',
+    };
+    return styleGuides[style] || style;
+  };
+
+  const getInkingDescription = (inking: string) => {
+    const inkingGuides: Record<string, string> = {
+      'Digital Painting': 'Full digital painting with blended colors, no hard line art, painterly texture and brushwork',
+      'Soft Brush': 'Soft, organic brush strokes with gentle edges and smooth transitions',
+      'Clean Digital': 'Precise, clean digital lines with consistent weight and smooth curves',
+      'Airbrush': 'Smooth airbrush shading with soft gradients and subtle color transitions',
+      'Painterly': 'Expressive painterly strokes with visible brush texture and artistic flair',
+      'G-Pen': 'Traditional manga G-pen with variable line weight, crisp blacks',
+      'Tachikawa Pen': 'Thin, consistent lines with delicate detail work',
+      'Brush Ink': 'Dynamic brush strokes with natural variation in thickness',
+      'Marker': 'Bold marker-like lines with solid, even strokes',
+      'Digital': 'Standard digital inking with clean, consistent lines',
+    };
+    return inkingGuides[inking] || inking;
+  };
+
   const enhancedPrompt = `
 ╔═══════════════════════════════════════════════════════════════════╗
 ║                    MANGA PAGE GENERATION REQUEST                   ║
+${isBatchContinuation ? `║                     🔥 BATCH AUTO-CONTINUE MODE 🔥                  ║` : ''}
 ╚═══════════════════════════════════════════════════════════════════╝
 
-📝 CURRENT SCENE TO ILLUSTRATE:
-${prompt}
+${isBatchContinuation ? '' : config.autoContinueStory && sessionHistory && sessionHistory.length > 0 ? `
+🔄 AUTO-CONTINUE MODE ACTIVATED:
+• This is an AUTOMATIC STORY CONTINUATION from the previous page
+• Analyze the previous page(s) provided and create the NEXT logical scene
+• The story should flow naturally - what happens next?
+• Maintain story momentum and pacing
+• You have creative freedom to continue the narrative naturally
+• Keep the same characters, setting, and story tone
+
+` : ''}
+📝 ${isBatchContinuation ? 'BATCH CONTINUATION INSTRUCTIONS' : config.autoContinueStory && sessionHistory && sessionHistory.length > 0 ? 'GUIDANCE FOR CONTINUATION' : 'CURRENT SCENE TO ILLUSTRATE'}:
+${actualPrompt}
 
 🎨 TECHNICAL SPECIFICATIONS:
-• Art Style: ${config.style}
-• Inking Technique: ${config.inking}
+• Art Style: ${config.style} - ${getStyleDescription(config.style)}
+• Inking Technique: ${config.inking} - ${getInkingDescription(config.inking)}
 • Screentone Density: ${config.screentone}
 • Color Mode: ${config.useColor ? 'Full Color Manga/Anime Style' : 'Traditional Black and White Manga Ink'}
+${config.style.includes('Webtoon') || config.style.includes('Manhwa') || config.style.includes('Digital') || config.style.includes('Cinematic') || config.style.includes('Realistic') 
+  ? `\n🌟 STYLE-SPECIFIC REQUIREMENTS:
+${config.style.includes('Webtoon') || config.style.includes('Manhwa') 
+    ? '• Use vibrant, saturated colors with dramatic lighting and glossy rendering\n• Apply soft shadows and highlights for depth\n• Use cinematic camera angles and atmospheric effects\n• Characters should have polished, modern aesthetic' 
+    : ''}
+${config.style.includes('Digital Painting') 
+    ? '• Create fully painted artwork with NO hard line art\n• Use painterly brushstrokes and textured rendering\n• Apply rich, blended colors with atmospheric lighting\n• Show visible brush texture and artistic painting techniques' 
+    : ''}
+${config.style.includes('Realistic') 
+    ? '• Use realistic human proportions and anatomy\n• Apply detailed facial features and expressions\n• Use photorealistic lighting and shading\n• Maintain manga/anime aesthetic while being realistic' 
+    : ''}
+${config.style.includes('Clean Line') 
+    ? '• Use crisp, clean vector-quality lines\n• Minimal texture, smooth curves\n• Modern minimalist aesthetic with professional finish' 
+    : ''}
+${config.style.includes('Cinematic') 
+    ? '• Apply dramatic camera angles (dutch angles, low angles, bird\'s eye)\n• Use cinematic lighting (rim light, backlighting, volumetric light)\n• Add depth of field and atmospheric perspective\n• Create movie-like compositions' 
+    : ''}`
+  : ''}
 
 🔲 PANEL LAYOUT - ${config.layout}:
 ${LAYOUT_PROMPTS[config.layout] || config.layout}
@@ -135,13 +348,27 @@ ${continuityInstructions}
 ${dialogueInstructions}
 
 📐 COMPOSITION RULES:
-${config.layout === 'Single Panel' || config.layout === 'Dramatic Spread'
-  ? '⚠️ NO PANEL BORDERS - This is a full-page illustration without divisions'
-  : `⚠️ MUST HAVE ${config.layout.includes('Double') ? 'TWO' : config.layout.includes('Triple') ? 'THREE' : 'FOUR'} CLEAR PANEL BORDERS - Draw distinct black borders separating each panel`}
+${config.layout === 'Single Panel' || config.layout === 'Dramatic Spread' || config.layout === 'Widescreen Cinematic'
+  ? '⚠️ NO SMALL PANEL DIVISIONS - This is a full-page or minimal-panel illustration'
+  : config.layout === 'Dynamic Freestyle' || config.layout === 'Asymmetric Mixed'
+    ? '⚠️ MULTIPLE PANELS WITH VARIED SIZES - Use 5-8 panels of different dimensions for visual dynamism. Each panel needs clear black borders.'
+    : config.layout.includes('Action Sequence')
+      ? '⚠️ 5-7 DYNAMIC ACTION PANELS - Mix panel sizes (large + small) with clear black borders for kinetic flow'
+      : config.layout.includes('Conversation')
+        ? '⚠️ 4-6 HORIZONTAL PANELS - Stacked vertically with clear borders for dialogue flow'
+        : config.layout === 'Z-Pattern Flow'
+          ? '⚠️ 5-6 PANELS IN Z-PATTERN - Arranged to guide eye flow with clear black borders'
+          : config.layout === 'Vertical Strip'
+            ? '⚠️ 3-5 WIDE HORIZONTAL PANELS - Full-width strips stacked vertically'
+            : config.layout === 'Climax Focus'
+              ? '⚠️ ONE DOMINANT PANEL (40-50% of page) + 4-5 SMALLER SUPPORTING PANELS with clear borders'
+              : `⚠️ MUST HAVE ${config.layout.includes('Double') ? 'TWO' : config.layout.includes('Triple') ? 'THREE' : 'FOUR'} CLEAR PANEL BORDERS - Draw distinct black borders separating each panel`}
 ✓ All content must fit within one high-resolution page image
 ✓ Apply dynamic angles and perspectives for visual impact
-✓ Use authentic manga visual language (speed lines, impact frames, etc.)
+✓ Use authentic manga visual language (speed lines, impact frames, dramatic close-ups, perspective shots)
 ${config.screentone !== 'None' ? `✓ Apply ${config.screentone.toLowerCase()} screentone for depth and atmosphere` : ''}
+✓ Panel borders should be solid black lines (1-3px thick) for clear separation
+${config.layout.includes('Freestyle') || config.layout.includes('Asymmetric') || config.layout.includes('Action') ? '✓ Be creative with panel shapes - use diagonal cuts, overlapping edges, or irregular forms' : ''}
 
 ${sessionHistory && sessionHistory.length > 0 ? `
 ⚠️ FINAL REMINDER: This page is part of an ongoing story. Characters MUST look exactly the same as in previous pages. Check character descriptions and previous scenes carefully before drawing!

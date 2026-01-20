@@ -35,6 +35,7 @@ export default function StorySettingsPanel({
 }: StorySettingsPanelProps) {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [uploading, setUploading] = useState(false);
+    const [autoContinue, setAutoContinue] = useState(true);
 
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
@@ -167,38 +168,105 @@ export default function StorySettingsPanel({
                     </div>
 
                     <div className="space-y-4">
-                        {/* Style */}
+                        {/* Quick Style Presets */}
                         <div className="space-y-2">
                             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider" style={{ fontFamily: 'var(--font-inter)' }}>
-                                Manga Style
+                                🎨 Quick Presets
+                            </label>
+                            <div className="grid grid-cols-2 gap-2">
+                                <button
+                                    onClick={() => onConfigChange({
+                                        ...config,
+                                        style: 'Modern Webtoon',
+                                        inking: 'Digital Painting',
+                                        screentone: 'None',
+                                        useColor: true
+                                    })}
+                                    className="px-2 py-1.5 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white rounded text-[10px] font-bold transition-all"
+                                    style={{ fontFamily: 'var(--font-inter)' }}
+                                >
+                                    🇰🇷 Webtoon Style
+                                </button>
+                                <button
+                                    onClick={() => onConfigChange({
+                                        ...config,
+                                        style: 'Digital Painting',
+                                        inking: 'Painterly',
+                                        screentone: 'None',
+                                        useColor: true
+                                    })}
+                                    className="px-2 py-1.5 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 text-white rounded text-[10px] font-bold transition-all"
+                                    style={{ fontFamily: 'var(--font-inter)' }}
+                                >
+                                    🎨 Digital Paint
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Style */}
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider flex items-center gap-2" style={{ fontFamily: 'var(--font-inter)' }}>
+                                <span>Art Style</span>
+                                {(config.style.includes('Webtoon') || config.style.includes('Manhwa') || config.style.includes('Digital')) && (
+                                    <span className="text-[9px] text-pink-500 font-normal normal-case">✨ Modern</span>
+                                )}
                             </label>
                             <Select value={config.style} onValueChange={(value) => onConfigChange({ ...config, style: value as MangaStyle })}>
                                 <SelectTrigger className="w-full bg-zinc-950 border-zinc-800 text-zinc-300 hover:border-amber-500 focus:border-amber-500 h-9 text-xs">
                                     <SelectValue />
                                 </SelectTrigger>
-                                <SelectContent className="bg-zinc-950 border-zinc-800 font-sans">
-                                    {Object.values(MangaStyle).map(s => (
+                                <SelectContent className="bg-zinc-950 border-zinc-800 font-sans max-h-[300px]">
+                                    <div className="px-2 py-1 text-[9px] text-zinc-500 uppercase tracking-wider">Traditional Manga</div>
+                                    {['Shonen', 'Shoujo', 'Seinen', 'Josei'].map(s => (
                                         <SelectItem key={s} value={s} className="text-xs text-zinc-300 hover:bg-amber-500/20 focus:bg-amber-500/20 focus:text-white cursor-pointer">
+                                            {s}
+                                        </SelectItem>
+                                    ))}
+                                    <div className="px-2 py-1 mt-2 text-[9px] text-pink-500 uppercase tracking-wider">Modern Styles</div>
+                                    {['Modern Webtoon', 'Korean Manhwa', 'Digital Painting', 'Realistic Manga', 'Semi-Realistic', 'Clean Line Art', 'Cinematic Style'].map(s => (
+                                        <SelectItem key={s} value={s} className="text-xs text-zinc-300 hover:bg-pink-500/20 focus:bg-pink-500/20 focus:text-white cursor-pointer">
                                             {s}
                                         </SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
+                            {(config.style === 'Modern Webtoon' || config.style === 'Korean Manhwa') && (
+                                <div className="text-[9px] text-pink-400 bg-pink-500/10 border border-pink-500/20 rounded p-2 leading-relaxed">
+                                    🇰🇷 Korean style with vibrant colors, dramatic lighting & glossy rendering. Best with COLOR mode!
+                                </div>
+                            )}
+                            {config.style === 'Digital Painting' && (
+                                <div className="text-[9px] text-purple-400 bg-purple-500/10 border border-purple-500/20 rounded p-2 leading-relaxed">
+                                    🎨 Painterly style with blended colors & textured brushwork. Recommended: COLOR mode + Painterly inking!
+                                </div>
+                            )}
+                            {(config.style === 'Realistic Manga' || config.style === 'Semi-Realistic') && (
+                                <div className="text-[9px] text-blue-400 bg-blue-500/10 border border-blue-500/20 rounded p-2 leading-relaxed">
+                                    📸 Realistic proportions with manga aesthetics. Works great in both B&W and color!
+                                </div>
+                            )}
                         </div>
 
                         {/* Inking & Screentone */}
                         <div className="grid grid-cols-2 gap-3">
                             <div className="space-y-2">
                                 <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider" style={{ fontFamily: 'var(--font-inter)' }}>
-                                    Pen Style
+                                    Inking/Render
                                 </label>
                                 <Select value={config.inking} onValueChange={(value) => onConfigChange({ ...config, inking: value as InkingStyle })}>
                                     <SelectTrigger className="w-full bg-zinc-950 border-zinc-800 text-zinc-300 hover:border-amber-500 focus:border-amber-500 h-9 text-xs">
                                         <SelectValue />
                                     </SelectTrigger>
-                                    <SelectContent className="bg-zinc-950 border-zinc-800">
-                                        {Object.values(InkingStyle).map(s => (
+                                    <SelectContent className="bg-zinc-950 border-zinc-800 max-h-[300px]">
+                                        <div className="px-2 py-1 text-[9px] text-zinc-500 uppercase tracking-wider">Traditional Ink</div>
+                                        {['G-Pen', 'Tachikawa Pen', 'Brush Ink', 'Marker'].map(s => (
                                             <SelectItem key={s} value={s} className="text-xs text-zinc-300 hover:bg-amber-500/20 focus:bg-amber-500/20 focus:text-white cursor-pointer">
+                                                {s}
+                                            </SelectItem>
+                                        ))}
+                                        <div className="px-2 py-1 mt-2 text-[9px] text-pink-500 uppercase tracking-wider">Digital Rendering</div>
+                                        {['Digital', 'Clean Digital', 'Digital Painting', 'Soft Brush', 'Airbrush', 'Painterly'].map(s => (
+                                            <SelectItem key={s} value={s} className="text-xs text-zinc-300 hover:bg-pink-500/20 focus:bg-pink-500/20 focus:text-white cursor-pointer">
                                                 {s}
                                             </SelectItem>
                                         ))}
@@ -206,8 +274,11 @@ export default function StorySettingsPanel({
                                 </Select>
                             </div>
                             <div className="space-y-2">
-                                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider" style={{ fontFamily: 'var(--font-inter)' }}>
-                                    Screentone
+                                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider flex items-center gap-1" style={{ fontFamily: 'var(--font-inter)' }}>
+                                    <span>Screentone</span>
+                                    {(config.style.includes('Webtoon') || config.style.includes('Manhwa') || config.style.includes('Digital')) && config.screentone !== 'None' && (
+                                        <span className="text-[8px] text-yellow-500 font-normal normal-case">💡 None</span>
+                                    )}
                                 </label>
                                 <Select value={config.screentone} onValueChange={(value) => onConfigChange({ ...config, screentone: value as ScreentoneDensity })}>
                                     <SelectTrigger className="w-full bg-zinc-950 border-zinc-800 text-zinc-300 hover:border-amber-500 focus:border-amber-500 h-9 text-xs">
@@ -226,14 +297,15 @@ export default function StorySettingsPanel({
 
                         {/* Layout */}
                         <div className="space-y-2">
-                            <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider" style={{ fontFamily: 'var(--font-inter)' }}>
-                                Panel Layout
+                            <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider flex items-center gap-2" style={{ fontFamily: 'var(--font-inter)' }}>
+                                <span>Panel Layout</span>
+                                <span className="text-[9px] text-amber-500 font-normal normal-case">(Choose manga page style)</span>
                             </label>
                             <Select value={config.layout} onValueChange={(value) => onConfigChange({ ...config, layout: value as PanelLayout })}>
                                 <SelectTrigger className="w-full bg-zinc-950 border-zinc-800 text-zinc-300 hover:border-amber-500 focus:border-amber-500 h-9 text-xs">
                                     <SelectValue />
                                 </SelectTrigger>
-                                <SelectContent className="bg-zinc-950 border-zinc-800 font-sans">
+                                <SelectContent className="bg-zinc-950 border-zinc-800 font-sans max-h-[300px]">
                                     {Object.values(PanelLayout).map(l => (
                                         <SelectItem key={l} value={l} className="text-xs text-zinc-300 hover:bg-amber-500/20 focus:bg-amber-500/20 focus:text-white cursor-pointer">
                                             {l}
@@ -241,6 +313,11 @@ export default function StorySettingsPanel({
                                     ))}
                                 </SelectContent>
                             </Select>
+                            {config.layout === 'Dynamic Freestyle' && (
+                                <div className="text-[9px] text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded p-2 leading-relaxed">
+                                    ✨ AI will create 5-8 panels with varied sizes and shapes for dynamic visual storytelling!
+                                </div>
+                            )}
                         </div>
 
                         {/* Dialogue & Language */}
@@ -301,8 +378,11 @@ export default function StorySettingsPanel({
                                 </Select>
                             </div>
                             <div className="space-y-2">
-                                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider" style={{ fontFamily: 'var(--font-inter)' }}>
-                                    Color Mode
+                                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider flex items-center gap-1" style={{ fontFamily: 'var(--font-inter)' }}>
+                                    <span>Color Mode</span>
+                                    {(config.style.includes('Webtoon') || config.style.includes('Manhwa') || config.style.includes('Digital') || config.style.includes('Cinematic')) && !config.useColor && (
+                                        <span className="text-[8px] text-pink-500 font-normal normal-case">⚡ Try COLOR!</span>
+                                    )}
                                 </label>
                                 <button
                                     onClick={() => onConfigChange({ ...config, useColor: !config.useColor })}
@@ -312,9 +392,34 @@ export default function StorySettingsPanel({
                                         ...(config.useColor ? { backgroundImage: 'linear-gradient(to right, #ec4899, #a855f7, #3b82f6, #06b6d4)' } : {})
                                     }}
                                 >
-                                    {config.useColor ? 'COLOR' : 'B&W'}
+                                    {config.useColor ? '🎨 COLOR' : '⚫ B&W'}
                                 </button>
                             </div>
+                        </div>
+
+                        {/* Auto-Continue Story */}
+                        <div className="space-y-2 pt-2 border-t border-zinc-800">
+                            <div className="flex items-center justify-between">
+                                <div className="flex-1">
+                                    <label className="text-[10px] font-bold text-emerald-500 uppercase tracking-wider flex items-center gap-2" style={{ fontFamily: 'var(--font-inter)' }}>
+                                        <span>🤖 Auto-Continue Story</span>
+                                    </label>
+                                    <p className="text-[9px] text-zinc-500 mt-1 leading-relaxed" style={{ fontFamily: 'var(--font-inter)' }}>
+                                        AI tự động tiếp tục câu chuyện từ page trước (không cần viết prompt mới)
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={() => onConfigChange({ ...config, autoContinueStory: !config.autoContinueStory })}
+                                    className={`ml-3 relative w-14 h-7 rounded-full transition-all ${config.autoContinueStory ? 'bg-gradient-to-r from-emerald-500 to-green-600' : 'bg-zinc-700'}`}
+                                >
+                                    <div className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform ${config.autoContinueStory ? 'translate-x-7' : 'translate-x-0'}`} />
+                                </button>
+                            </div>
+                            {config.autoContinueStory && (
+                                <div className="text-[9px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded p-2 leading-relaxed">
+                                    ✨ Enabled! Khi gen page mới, AI sẽ tự động tạo scene tiếp theo dựa trên story flow.
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

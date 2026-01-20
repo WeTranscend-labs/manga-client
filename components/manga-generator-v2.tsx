@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Sparkles, Eye, Settings, Layers, MessageSquare } from 'lucide-react';
 import {
@@ -27,7 +27,7 @@ import {
   MangaSession,
 } from '@/lib/types';
 import { loadProject, saveProject } from '@/lib/services/storage-service';
-import { generateMangaImage } from '@/lib/services/gemini-service';
+import { generateMangaImage, generateNextPrompt } from '@/lib/services/gemini-service';
 import StorySettingsPanel from '@/components/story-settings-panel';
 import SessionSidebar from '@/components/studio/session-sidebar';
 import PromptPanel from '@/components/studio/prompt-panel';
@@ -50,12 +50,16 @@ const MangaGeneratorV2 = () => {
     useColor: false,
     dialogueDensity: DialogueDensity.MEDIUM,
     language: Language.ENGLISH,
-    context: ''
+    context: '',
+    autoContinueStory: true
   });
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentImage, setCurrentImage] = useState<string | null>(null);
+  const [batchLoading, setBatchLoading] = useState(false);
+  const [batchProgress, setBatchProgress] = useState<{ current: number; total: number } | null>(null);
+  const batchCancelledRef = useRef(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const [showFullscreen, setShowFullscreen] = useState(false);
@@ -303,7 +307,11 @@ const MangaGeneratorV2 = () => {
   }, [project]);
 
   const handleGenerate = async () => {
-    if (!prompt.trim()) return;
+    const hasPages = currentSession && currentSession.pages.length > 0;
+    const isAutoContinue = config.autoContinueStory && hasPages;
+    
+    // Allow empty prompt if auto-continue is enabled
+    if (!prompt.trim() && !isAutoContinue) return;
 
     let workingSession = currentSession;
     if (!workingSession) {
@@ -332,7 +340,7 @@ const MangaGeneratorV2 = () => {
     const userMessage = {
       id: Date.now().toString() + Math.random().toString(36).substring(2),
       role: 'user' as const,
-      content: prompt,
+      content: prompt || (isAutoContinue ? 'Continue the story naturally' : ''),
       timestamp: Date.now(),
       config: { ...config, context: context || config.context }
     };
@@ -382,6 +390,137 @@ const MangaGeneratorV2 = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleBatchGenerate = async () => {
+    const hasPages = currentSession && currentSession.pages.length > 0;
+    const isAutoContinue = config.autoContinueStory && hasPages;
+    
+    // Allow empty prompt if auto-continue is enabled
+    if (!prompt.trim() && !isAutoContinue) return;
+
+    let workingSession = currentSession;
+    if (!workingSession) {
+      const newSessionId = Date.now().toString() + Math.random().toString(36).substring(2);
+      const newSession: MangaSession = {
+        id: newSessionId,
+        name: 'Batch ' + new Date().toLocaleTimeString(),
+        context: context || '',
+        pages: [],
+        chatHistory: [],
+        createdAt: Date.now(),
+        updatedAt: Date.now()
+      };
+      workingSession = newSession;
+      setCurrentSession(newSession);
+      setProject(prev => ({
+        ...prev,
+        sessions: Array.isArray(prev.sessions) ? [...prev.sessions, newSession] : [newSession],
+        currentSessionId: newSessionId
+      }));
+    }
+
+    setBatchLoading(true);
+    batchCancelledRef.current = false;
+    setBatchProgress({ current: 0, total: 10 });
+    setError(null);
+
+    const totalPages = 10;
+    const originalPrompt = prompt || 'Start an exciting manga story';
+    const sessionId = workingSession.id;
+    let generatedCount = 0;
+    let localSession = workingSession; // Track session locally for continuity
+    let currentPrompt = originalPrompt;
+
+    for (let i = 0; i < totalPages; i++) {
+      if (batchCancelledRef.current) {
+        setBatchLoading(false);
+        setBatchProgress(null);
+        setError(`Batch cancelled. Generated ${generatedCount} of ${totalPages} pages.`);
+        return;
+      }
+
+      try {
+        const sessionHistory = localSession.pages || [];
+        
+        // STEP 1: Generate prompt for this page (except first page)
+        if (i > 0) {
+          // AI generates the NEXT prompt based on previous pages
+          setBatchProgress({ current: i, total: totalPages });
+          currentPrompt = await generateNextPrompt(
+            sessionHistory,
+            context || config.context || '',
+            originalPrompt,
+            i + 1,
+            totalPages
+          );
+          console.log(`AI Generated Prompt for Page ${i + 1}:`, currentPrompt);
+        }
+        
+        const configWithContext = { 
+          ...config, 
+          context: context || config.context,
+          autoContinueStory: false // Don't use auto-continue, we have explicit prompts now
+        };
+
+        // STEP 2: Generate image using the prompt
+        const imageUrl = await generateMangaImage(currentPrompt, configWithContext, sessionHistory);
+
+        // Create page object
+        const newPage: GeneratedManga = {
+          id: Date.now().toString() + Math.random().toString(36).substring(2),
+          url: imageUrl,
+          prompt: currentPrompt, // Use the actual prompt (original or AI-generated)
+          timestamp: Date.now(),
+          config: configWithContext,
+          markedForExport: true
+        };
+
+        // Update local session
+        localSession = {
+          ...localSession,
+          pages: [...localSession.pages, newPage],
+          updatedAt: Date.now()
+        };
+
+        // Update React state
+        setCurrentSession(localSession);
+        setProject(prev => ({
+          ...prev,
+          pages: [...prev.pages, newPage],
+          sessions: (Array.isArray(prev.sessions) ? prev.sessions : []).map(s =>
+            s.id === sessionId ? localSession : s
+          )
+        }));
+
+        generatedCount++;
+        // Update progress
+        setBatchProgress({ current: i + 1, total: totalPages });
+
+        // Small delay between generations to avoid overwhelming the API
+        if (i < totalPages - 1) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+      } catch (err) {
+        console.error(`Error generating page ${i + 1}:`, err);
+        setError(`Failed at page ${i + 1}. Successfully generated ${generatedCount} pages.`);
+        setBatchLoading(false);
+        setBatchProgress(null);
+        return;
+      }
+    }
+
+    setBatchLoading(false);
+    setBatchProgress(null);
+    setPrompt('');
+    
+    if (!batchCancelledRef.current) {
+      setError(null);
+    }
+  };
+
+  const cancelBatchGenerate = () => {
+    batchCancelledRef.current = true;
   };
 
   const addToProject = (markForExport = true) => {
@@ -622,8 +761,13 @@ const MangaGeneratorV2 = () => {
                 currentSession={currentSession}
                 loading={loading}
                 error={error}
+                batchLoading={batchLoading}
+                batchProgress={batchProgress}
+                config={config}
                 onPromptChange={setPrompt}
                 onGenerate={handleGenerate}
+                onBatchGenerate={handleBatchGenerate}
+                onCancelBatch={cancelBatchGenerate}
               />
             </aside>
 
@@ -662,6 +806,13 @@ const MangaGeneratorV2 = () => {
         }
         .animate-shimmer {
           animation: shimmer 2s infinite;
+        }
+        @keyframes gradient {
+          0%, 100% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+        }
+        .animate-gradient {
+          animation: gradient 3s ease infinite;
         }
         .custom-scrollbar::-webkit-scrollbar {
           width: 4px;

@@ -3,6 +3,13 @@ export enum MangaStyle {
   SHOUJO = 'Shoujo',
   SEINEN = 'Seinen',
   JOSEI = 'Josei',
+  WEBTOON = 'Modern Webtoon',
+  MANHWA = 'Korean Manhwa',
+  DIGITAL_PAINTING = 'Digital Painting',
+  REALISTIC = 'Realistic Manga',
+  CLEAN_LINE = 'Clean Line Art',
+  CINEMATIC = 'Cinematic Style',
+  SEMI_REALISTIC = 'Semi-Realistic',
 }
 
 export enum InkingStyle {
@@ -11,6 +18,11 @@ export enum InkingStyle {
   BRUSH = 'Brush Ink',
   MARKER = 'Marker',
   DIGITAL = 'Digital',
+  DIGITAL_PAINTING = 'Digital Painting',
+  SOFT_BRUSH = 'Soft Brush',
+  CLEAN_DIGITAL = 'Clean Digital',
+  AIRBRUSH = 'Airbrush',
+  PAINTERLY = 'Painterly',
 }
 
 export enum ScreentoneDensity {
@@ -32,6 +44,14 @@ export enum PanelLayout {
   TRIPLE = 'Triple Panel',
   GRID = 'Grid Layout',
   DRAMATIC = 'Dramatic Spread',
+  DYNAMIC_FREESTYLE = 'Dynamic Freestyle',
+  ACTION_SEQUENCE = 'Action Sequence (5-7 Panels)',
+  CONVERSATION = 'Conversation Layout',
+  Z_PATTERN = 'Z-Pattern Flow',
+  VERTICAL_STRIP = 'Vertical Strip',
+  ASYMMETRIC = 'Asymmetric Mixed',
+  CLIMAX_FOCUS = 'Climax Focus',
+  WIDESCREEN = 'Widescreen Cinematic',
 }
 
 export enum DialogueDensity {
@@ -62,6 +82,7 @@ export interface MangaConfig {
   language: Language | string;
   context?: string;
   referenceImages?: string[]; // Base64 or URLs
+  autoContinueStory?: boolean; // Auto-generate story continuation
 }
 
 export interface ChatMessage {
