@@ -62,6 +62,15 @@ export const generateNextPrompt = async (
     }
   }
 
+  // Include story direction if provided
+  const storyDirectionNote = config?.storyDirection && config.storyDirection.trim() 
+    ? `\n📖 STORY FLOW DIRECTION (Follow this overall direction):
+${config.storyDirection.trim()}
+
+⚠️ IMPORTANT: Use this story direction as a guide for the overall narrative flow. When generating pages, ensure the story progresses according to this direction while maintaining natural storytelling and continuity from previous pages.
+` 
+    : '';
+
   const promptGenerationRequest = `You are a professional manga story writer. Your task is to generate the NEXT scene prompt for a manga page.
 
 CONTEXT:
@@ -69,7 +78,7 @@ ${context}
 
 ORIGINAL STORY DIRECTION (for reference):
 ${originalPrompt}
-
+${storyDirectionNote}
 ${previousPagesInfo ? `PREVIOUS PAGES:
 ${previousPagesInfo}` : ''}
 
@@ -240,14 +249,19 @@ All characters described above MUST maintain their EXACT appearance throughout t
       if (pageMatch) {
         const currentPage = parseInt(pageMatch[2]);
         const totalPages = parseInt(pageMatch[3]);
+        const storyDirectionNote = config.storyDirection && config.storyDirection.trim() 
+          ? `\n📖 STORY DIRECTION: Follow the overall story direction provided. This is page ${currentPage} of ${totalPages} - ensure the story progresses according to the direction while maintaining natural flow.\n`
+          : '';
+        
         actualPrompt = `📖 BATCH STORY CONTINUATION (Page ${currentPage}/${totalPages}):
         
 You are creating page ${currentPage} in a ${totalPages}-page manga sequence. This is an AUTOMATIC story continuation.
-
+${storyDirectionNote}
 INSTRUCTIONS:
 • Carefully analyze ALL previous pages (especially the most recent one)
 • Create the NEXT scene that logically follows from what just happened
 • Advance the story forward naturally - what happens next?
+${config.storyDirection && config.storyDirection.trim() ? '• Align with the overall story direction while maintaining natural storytelling' : ''}
 • Maintain story pacing appropriate for page ${currentPage} of ${totalPages}
 • Build towards a climax if approaching page ${totalPages}
 • Keep the narrative flowing smoothly between pages
@@ -258,9 +272,14 @@ Create the next scene that continues this manga story naturally.`;
     } else if (!prompt || prompt.trim() === '' || prompt === 'Continue the story naturally' || shouldContinue) {
       // This is a continuation - enhance the prompt to emphasize continuation from the LAST page
       const lastPageNum = sessionHistory!.length;
+      const storyDirectionNote = config.storyDirection && config.storyDirection.trim() 
+        ? `\n📖 STORY DIRECTION CONTEXT: Keep the overall story direction in mind while continuing naturally from the previous page.\n`
+        : '';
+      
       actualPrompt = `📖 STORY CONTINUATION - PAGE ${lastPageNum + 1} (Continuing from Page ${lastPageNum}):
 
 ⚠️ CRITICAL: This page (Page ${lastPageNum + 1}) MUST continue DIRECTLY from Page ${lastPageNum} (the most recent page).
+${storyDirectionNote}
 
 ANALYZE PAGE ${lastPageNum} (THE LAST PAGE):
 - Study Page ${lastPageNum} VERY CAREFULLY - especially the LAST PANEL
@@ -275,6 +294,7 @@ CREATE PAGE ${lastPageNum + 1} (THE NEXT PAGE):
 - Panel 1 must be VISUALLY DIFFERENT - use different composition, camera angle, or show a different moment
 - Continue the story chronologically - show the NEXT moment in the timeline
 - Advance the narrative forward - what happens because of what ended in Page ${lastPageNum}?
+${config.storyDirection && config.storyDirection.trim() ? '- Align with the overall story direction while maintaining natural flow' : ''}
 - Build on the story momentum from Page ${lastPageNum}
 - DO NOT repeat the same scene, action, or moment from Page ${lastPageNum}
 - DO NOT show characters in the same position doing the same thing
@@ -290,9 +310,14 @@ Create a scene that naturally follows and advances the story from Page ${lastPag
     } else {
       // User provided a specific prompt, but we still need to continue from previous page
       const lastPageNum = sessionHistory!.length;
+      const storyDirectionNote = config.storyDirection && config.storyDirection.trim() 
+        ? `\n📖 STORY DIRECTION CONTEXT: Keep the overall story direction in mind: "${config.storyDirection.substring(0, 200)}${config.storyDirection.length > 200 ? '...' : ''}"\n`
+        : '';
+      
       actualPrompt = `📖 STORY CONTINUATION WITH DIRECTION - PAGE ${lastPageNum + 1}:
 
 This page (Page ${lastPageNum + 1}) continues from Page ${lastPageNum} (the most recent page), moving toward: "${prompt}"
+${storyDirectionNote}
 
 CRITICAL CONTINUITY:
 - Page ${lastPageNum} ended at a specific moment - study its LAST PANEL carefully
@@ -300,6 +325,7 @@ CRITICAL CONTINUITY:
 - ⚠️ CRITICAL: Panel 1 MUST NOT duplicate or repeat the visual content of Page ${lastPageNum}'s last panel
 - Panel 1 must be VISUALLY DISTINCT - different composition, angle, or moment
 - Then progress toward the direction: "${prompt}"
+${config.storyDirection && config.storyDirection.trim() ? '- Align with the overall story direction provided' : ''}
 - DO NOT skip or ignore what happened in Page ${lastPageNum}
 - DO NOT repeat scenes or actions from Page ${lastPageNum}
 - DO NOT recreate the same visual composition, pose, or scene from Page ${lastPageNum}'s panels
@@ -311,7 +337,7 @@ Page ${lastPageNum} (ended with...) → Page ${lastPageNum + 1} (continues from 
 Create a scene that:
 1. Continues from Page ${lastPageNum}'s last panel (the immediate next moment)
 2. Moves toward the direction: "${prompt}"
-3. Advances the story chronologically
+${config.storyDirection && config.storyDirection.trim() ? '3. Aligns with the overall story direction' : '3. Advances the story chronologically'}
 4. Shows new moments, not repeated ones
 5. Maintains story continuity from Page ${lastPageNum}`;
     }
@@ -401,18 +427,29 @@ Create a scene that:
 ✓ "nhạt" (NOT "nhat" or "nhạh") - means "bland"
 ✓ "kết quả" (NOT "ket qua" or "quả mình") - means "result"
 
-🚫 COMMON MISTAKES TO AVOID:
-✗ "RỐT" → Should be "RỐI" (messy) or "RỐT RÁO" (urgent)
-✗ "BẪN ĐỒ" → Should be "BẨN ĐỒ" (dirty thing)
-✗ "RÒ" → Should be "RỒI" (already/done)
-✗ "TẾ CÃ" → Should be "TẤT CẢ" (everyone/all)
-✗ "ĐÔ VỘ DƯỢNG" → Should be "ĐỒ VÔ DỤNG" (useless thing)
+🚫 COMMON MISTAKES TO AVOID (VERIFY THESE CAREFULLY):
+✗ "RỐT" → Should be "RỐI" (messy) or "RỐT RÁO" (urgent) - NEVER use "RỐT" alone
+✗ "BẪN ĐỒ" → Should be "BẨN ĐỒ" (dirty thing) - "BẪN" is WRONG, must be "BẨN"
+✗ "RÒ" → Should be "RỒI" (already/done) - MUST have diacritic "ồ"
+✗ "RỒI" (NOT "roi" or "rò") - always check the diacritic
+✗ "TẾ CÃ" → Should be "TẤT CẢ" (everyone/all) - "TẾ CÃ" is COMPLETELY WRONG
+✗ "TẤT CẢ" (NOT "tat ca" or "tế cã") - must have all diacritics
+✗ "ĐÔ VỘ DƯỢNG" → Should be "ĐỒ VÔ DỤNG" (useless thing) - "ĐÔ VỘ DƯỢNG" is WRONG
+✗ "ĐỒ VÔ DỤNG" (NOT "đô vộ dượng" or "do vo dung") - verify each word carefully
 ✗ "QUẢ MÌNH" → Should be "KẾT QUẢ CỦA MÌNH" (my result) or "PHẦN CỦA MÌNH" (my share)
-✗ "NHẠH" → Should be "NHẢY" (jump) or "NHẠT" (bland) depending on context
-✗ "THÁNH CỘNC" → Should be "THÀNH CÔNG" (successful)
-✗ Missing diacritics on any word
-✗ Using "d" instead of "đ"
-✗ Using "D" instead of "Đ"
+✗ "NHẠH" → Should be "NHẢY" (jump) or "NHẠT" (bland) - "NHẠH" is NOT a valid word
+✗ "THÁNH CỘNC" → Should be "THÀNH CÔNG" (successful) - "THÁNH CỘNC" is COMPLETELY WRONG
+✗ "THÀNH CÔNG" (NOT "thánh cộnc" or "thanh cong") - verify each character
+✗ Missing diacritics on ANY word - this makes the word WRONG
+✗ Using "d" instead of "đ" - they are DIFFERENT letters
+✗ Using "D" instead of "Đ" - they are DIFFERENT letters
+✗ "LÀ" (NOT "la") - must have diacritic "à"
+✗ "ĐÃ" (NOT "da") - must use "đ" not "d", and diacritic "ã"
+✗ "CỦA" (NOT "cua") - must have diacritic "ủ"
+✗ "VỚI" (NOT "voi") - must have diacritic "ớ"
+✗ "NGƯỜI" (NOT "nguoi") - must have diacritics "ư" and "ờ"
+✗ "VIỆC" (NOT "viec") - must have diacritics "ệ"
+✗ "ĐƯỢC" (NOT "duoc") - must use "đ" not "d", and diacritics "ư" and "ợ"
 
 ✓ REQUIRED:
 ✓ "đ" and "Đ" are DIFFERENT from "d" and "D" - use correct letter
@@ -454,18 +491,73 @@ Create a scene that:
 • Language: ${config.language} - ALL TEXT IN ${config.language.toUpperCase()}
 ${languageSpecificRules}
 
-⚠️⚠️⚠️ TEXT ACCURACY IS #1 PRIORITY - VERIFY BEFORE RENDERING ⚠️⚠️⚠️
-✓ Verify EVERY word character-by-character before rendering
-✓ Check common words: ${config.language === 'English' ? '"the", "and", "you", "are", "is", "was"' : config.language === 'Vietnamese' ? '"là", "đã", "của", "với", "này", "người", "rồi", "tất cả", "thành công", "vô dụng", "bẩn"' : config.language === 'Japanese' ? '"です", "ます", "は", "が"' : config.language === 'Korean' ? '"안녕", "있어", "없어"' : 'common words'}
-${config.language === 'Vietnamese' ? `✓ CRITICAL: ALL diacritics must be present - missing diacritics = wrong spelling
-✓ Double-check: "rồi" (NOT "rò"), "tất cả" (NOT "tế cã"), "thành công" (NOT "thánh cộnc"), "vô dụng" (NOT "đô vộ dượng"), "bẩn" (NOT "bẫn")
-✓ Verify "đ" vs "d" - they are DIFFERENT letters
-✓ Read each word aloud mentally to check diacritics` : config.language === 'Japanese' || config.language === 'Chinese' ? '✓ Verify EVERY character is correct, not similar-looking wrong ones' : config.language === 'Korean' ? '✓ Verify EVERY Hangul syllable block is correctly formed' : ''}
-✓ NO typos, NO misspellings, NO character errors - ZERO TOLERANCE
-✓ Text must be CRYSTAL CLEAR, sharp, readable with strong contrast
+⚠️⚠️⚠️⚠️⚠️ TEXT ACCURACY IS THE ABSOLUTE #1 PRIORITY - HIGHER THAN ANYTHING ELSE ⚠️⚠️⚠️⚠️⚠️
+
+🔴 MANDATORY PRE-RENDER TEXT VERIFICATION PROCESS:
+BEFORE rendering ANY text in the image, you MUST complete this verification:
+
+STEP 1: READ & SPELL CHECK (DO THIS FIRST):
+✓ Read EVERY word character-by-character, letter-by-letter
+✓ Mentally spell out each word to verify it's correct
+✓ Check common words especially: ${config.language === 'English' ? '"the", "and", "you", "are", "is", "was", "what", "that", "this", "with"' : config.language === 'Vietnamese' ? '"là", "đã", "của", "với", "này", "người", "rồi", "tất cả", "thành công", "vô dụng", "bẩn", "không", "nhưng", "được", "việc"' : config.language === 'Japanese' ? '"です", "ます", "は", "が", "を", "に"' : config.language === 'Korean' ? '"안녕", "있어", "없어", "하고", "그리고"' : 'common words'}
+✓ If you're unsure about ANY word's spelling, use a simpler word you're 100% certain is correct
+
+STEP 2: ${config.language === 'Vietnamese' ? 'DIACRITICS VERIFICATION (CRITICAL FOR VIETNAMESE):' : config.language === 'Japanese' || config.language === 'Chinese' ? 'CHARACTER VERIFICATION:' : config.language === 'Korean' ? 'HANGUL VERIFICATION:' : 'CHARACTER VERIFICATION:'}
+${config.language === 'Vietnamese' ? `✓ For EVERY word, verify ALL diacritics are present and correct
+✓ Check: "à" vs "a", "á" vs "a", "ả" vs "a", "ã" vs "a", "ạ" vs "a"
+✓ Check: "ă" vs "a", "â" vs "a", "đ" vs "d", "ê" vs "e", "ô" vs "o", "ơ" vs "o", "ư" vs "u"
+✓ Missing even ONE diacritic = WRONG spelling - this is CRITICAL
+✓ Verify "đ" vs "d" - they are COMPLETELY DIFFERENT letters
+✓ Read each word aloud mentally, checking each diacritic one by one
+✓ Common mistakes to avoid:
+  - "rồi" (NOT "rò" or "roi")
+  - "tất cả" (NOT "tế cã" or "tat ca")
+  - "thành công" (NOT "thánh cộnc" or "thanh cong")
+  - "vô dụng" (NOT "đô vộ dượng" or "vo dung")
+  - "bẩn" (NOT "bẫn" or "ban")
+  - "nhảy" (NOT "nhạh" or "nhay")
+  - "kết quả" (NOT "quả mình" or "ket qua")` : config.language === 'Japanese' || config.language === 'Chinese' ? `✓ For EVERY character, verify it's the CORRECT character, not similar-looking wrong ones
+✓ Check: 人 (person) vs 入 (enter), 日 (sun) vs 曰 (say), 大 (big) vs 太 (fat)
+✓ Every character must be exact - no substitutions` : config.language === 'Korean' ? `✓ For EVERY Hangul syllable block, verify it's correctly formed
+✓ Check: ㅏ (a) vs ㅓ (eo), ㅗ (o) vs ㅜ (u), ㅐ (ae) vs ㅔ (e)
+✓ Verify spacing between words is correct` : `✓ For EVERY character/letter, verify it's correct`}
+
+STEP 3: GRAMMAR & PUNCTUATION CHECK:
+✓ Verify sentence structure is correct
+✓ Check punctuation: periods (.), commas (,), question marks (?), exclamation marks (!)
+✓ Verify capitalization rules
+
+STEP 4: FINAL PROOFREAD (READ ALOUD MENTALLY):
+✓ Read through ALL text word-by-word, character-by-character
+✓ Visualize how each word will appear in the image
+✓ Check for ANY errors, typos, missing characters, or incorrect diacritics
+✓ If you find ANY error, STOP and correct it before rendering
+
+🚫 ABSOLUTELY FORBIDDEN - ZERO TOLERANCE:
+✗ ANY spelling mistakes or typos - even ONE typo is UNACCEPTABLE
+✗ Missing diacritics/accents (${config.language === 'Vietnamese' ? 'ESPECIALLY CRITICAL - missing diacritics = wrong word' : 'if applicable'})
+✗ Incorrect characters (using wrong kanji, wrong Hangul, wrong letters, etc.)
+✗ Character substitutions (similar-looking but wrong characters)
+✗ Letter swaps or transpositions
+✗ Grammar errors
+✗ Blurry, fuzzy, or unreadable text
+✗ Text that is too small to read
+✗ Placeholder text or gibberish
+
+✓ REQUIRED TEXT QUALITY:
+✓ Text must be CRYSTAL CLEAR, sharp, highly readable with strong contrast
 ✓ Use clear fonts, proper spacing, correct grammar and punctuation
-✓ Speech bubbles: white background, black outline, proper placement
-${config.dialogueDensity === 'Heavy Dialogue' ? '✓ Include narration boxes when appropriate - verify narration text accuracy' : ''}
+✓ Speech bubbles: white background (#FFFFFF), black outline (#000000), proper placement
+✓ Text size: minimum readable size (12pt+ equivalent)
+✓ Text contrast: dark text on light background for maximum readability
+${config.dialogueDensity === 'Heavy Dialogue' ? '✓ Include narration boxes when appropriate - verify narration text is also PERFECTLY accurate' : ''}
+
+⚠️⚠️⚠️ FINAL REMINDER: TEXT ACCURACY IS MORE IMPORTANT THAN ARTISTIC STYLE ⚠️⚠️⚠️
+• ONE typo can ruin the entire page's credibility
+• Readers will IMMEDIATELY notice ANY spelling or character errors
+• Take your time to verify spelling - it's better to be slow and accurate than fast and wrong
+• Double-check, triple-check, and verify EVERY word character-by-character before rendering
+• If you're unsure about ANY word's spelling, use a simpler word you're 100% certain is correct
 `;
   } else {
     dialogueInstructions = `
@@ -677,6 +769,13 @@ ${actualPrompt}
 ` : ''}
 
 ${!hasUserPrompt && referenceImageInstructions ? referenceImageInstructions + '\n' : ''}
+
+${config.storyDirection && config.storyDirection.trim() ? `
+📖 STORY DIRECTION & FLOW GUIDE:
+${config.storyDirection.trim()}
+
+⚠️ IMPORTANT: Use this story direction as a guide for the overall narrative flow. When generating pages, ensure the story progresses according to this direction while maintaining natural storytelling.
+` : ''}
 
 ${contextSection ? contextSection + '\n' : ''}
 

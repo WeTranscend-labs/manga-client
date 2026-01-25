@@ -83,6 +83,7 @@ export interface MangaConfig {
   context?: string;
   referenceImages?: string[]; // Base64 or URLs
   autoContinueStory?: boolean; // Auto-generate story continuation
+  storyDirection?: string; // Story flow/direction for auto-continue
 }
 
 export interface ChatMessage {

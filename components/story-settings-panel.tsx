@@ -364,6 +364,30 @@ export default function StorySettingsPanel({
                                     <div className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform ${config.autoContinueStory ? 'translate-x-7' : 'translate-x-0'}`} />
                                 </button>
                             </div>
+                            
+                            {/* Story Direction/Flow */}
+                            {config.autoContinueStory && (
+                                <div className="space-y-2 mt-3">
+                                    <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-2" style={{ fontFamily: 'var(--font-inter)' }}>
+                                        <span>Story Flow Direction</span>
+                                        <span className="text-[9px] text-zinc-500 font-normal normal-case">(Optional: Guide auto-continue flow)</span>
+                                    </label>
+                                    <textarea
+                                        value={config.storyDirection || ''}
+                                        onChange={(e) => {
+                                            try {
+                                                onConfigChange({ ...config, storyDirection: e.target.value });
+                                            } catch (error) {
+                                                console.error("Error in storyDirection onChange:", error);
+                                            }
+                                        }}
+                                        placeholder="Mô tả hướng phát triển của câu chuyện khi auto-continue:&#10;&#10;Ví dụ:&#10;- Hero đang trên đường tìm kiếm sức mạnh cổ xưa&#10;- Cuộc chiến với quái vật sẽ diễn ra ở thành phố cổ&#10;- Tình cảm giữa nhân vật chính và nữ chính sẽ phát triển dần..."
+                                        className="w-full h-24 bg-zinc-950 border border-zinc-800 rounded-lg p-3 text-sm leading-relaxed text-zinc-300 placeholder:text-zinc-600 placeholder:text-[11px] placeholder:leading-relaxed focus:outline-none focus:border-amber-500 transition-colors resize-none custom-scrollbar"
+                                        style={{ fontFamily: 'var(--font-inter)' }}
+                                        maxLength={2000}
+                                    />
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
