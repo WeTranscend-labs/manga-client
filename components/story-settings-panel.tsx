@@ -382,9 +382,9 @@ export default function StorySettingsPanel({
                                             }
                                         }}
                                         placeholder="Mô tả hướng phát triển của câu chuyện khi auto-continue:&#10;&#10;Ví dụ:&#10;- Hero đang trên đường tìm kiếm sức mạnh cổ xưa&#10;- Cuộc chiến với quái vật sẽ diễn ra ở thành phố cổ&#10;- Tình cảm giữa nhân vật chính và nữ chính sẽ phát triển dần..."
-                                        className="w-full h-24 bg-zinc-950 border border-zinc-800 rounded-lg p-3 text-sm leading-relaxed text-zinc-300 placeholder:text-zinc-600 placeholder:text-[11px] placeholder:leading-relaxed focus:outline-none focus:border-amber-500 transition-colors resize-none custom-scrollbar"
-                                        style={{ fontFamily: 'var(--font-inter)' }}
-                                        maxLength={2000}
+                                        className="w-full h-40 bg-zinc-950 border border-zinc-800 rounded-lg p-3 text-sm leading-relaxed text-zinc-300 placeholder:text-zinc-600 placeholder:text-[11px] placeholder:leading-relaxed focus:outline-none focus:border-amber-500 transition-colors resize-y custom-scrollbar"
+                                        style={{ fontFamily: 'var(--font-inter)', minHeight: '120px', maxHeight: '400px' }}
+                                        maxLength={10000}
                                     />
                                 </div>
                             )}
