@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion, useAnimationControls } from "motion/react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils/utils";
 
 type AnimationPhase = "idle" | "forming_column" | "scrolling_down" | "resetting";
 

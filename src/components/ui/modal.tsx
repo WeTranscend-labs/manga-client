@@ -1,6 +1,6 @@
 'use client';
 
-import { useUIStore } from '@/lib/stores/ui.store';
+import { useUIStore } from '@/stores/ui.store';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';

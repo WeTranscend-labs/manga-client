@@ -4,7 +4,7 @@ import { useState, useRef, useCallback } from 'react'
 import { toast } from 'sonner'
 import html2canvas from 'html2canvas'
 import jsPDF from 'jspdf'
-import { useCanvasStore } from '@/lib/stores/canvas-store'
+import { useCanvasStore } from '@/stores/canvas-store'
 
 // Components
 import Toolbar from '@/components/canvas-editor/toolbar'

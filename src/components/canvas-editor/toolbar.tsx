@@ -17,8 +17,8 @@ import {
   Pencil,
   Save,
 } from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { useCanvasStore } from '@/lib/stores/canvas-store'
+import { cn } from '@/utils/utils'
+import { useCanvasStore } from '@/stores/canvas-store'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import {

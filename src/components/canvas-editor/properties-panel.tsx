@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { Settings, ChevronLeft, ChevronRight, Palette } from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { useCanvasStore } from '@/lib/stores/canvas-store'
-import { CanvasElement, DialogueElement, TextElement, ImageElement, PanelElement } from '@/lib/types/canvas'
+import { cn } from '@/utils/utils'
+import { useCanvasStore } from '@/stores/canvas-store'
+import { CanvasElement, DialogueElement, TextElement, ImageElement, PanelElement } from '@/types/canvas'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'

@@ -1,14 +1,11 @@
-'use client'
+'use client';
 
-import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { Sparkles, Eye, Settings, Layers, MessageSquare, X, LogOut, Download } from 'lucide-react';
-import { toast } from 'sonner';
-import { safeArray, generateId, normalizeSession } from '@/lib/utils/react-utils';
-import { extractErrorMessage } from '@/lib/utils/error-handler';
-import { cleanUserPrompt } from '@/lib/utils/prompt-utils';
-import { authStore } from '@/lib/services/auth-client';
+import StorySettingsPanel from '@/components/story-settings-panel';
+import CanvasArea from '@/components/studio/canvas-area';
+import ChatHistoryPanel from '@/components/studio/chat-history-panel';
+import FullscreenModal from '@/components/studio/fullscreen-modal';
+import PromptPanel from '@/components/studio/prompt-panel';
+import SessionSidebar from '@/components/studio/session-sidebar';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,29 +16,43 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { authStore } from '@/services/auth-client';
 import {
-  MangaStyle,
-  InkingStyle,
-  ScreentoneDensity,
+  generateMangaImage,
+  generateNextPrompt,
+} from '@/services/gemini-service';
+import { storageService } from '@/services/storage.service';
+import {
   AspectRatio,
-  PanelLayout,
-  PanelBorderStyle,
-  GeneratedManga,
-  MangaProject,
-  MangaConfig,
   DialogueDensity,
+  GeneratedManga,
+  InkingStyle,
   Language,
+  MangaConfig,
+  MangaProject,
   MangaSession,
-} from '@/lib/types';
-import { loadProject, updateProjectMeta, saveProject, saveSession, deleteProject, deleteSession as deleteSessionApi, deletePages, deleteImage, deleteImages, addPageToSession } from '@/lib/services/storage-service';
-import { generateMangaImage, generateNextPrompt } from '@/lib/services/gemini-service';
-import StorySettingsPanel from '@/components/story-settings-panel';
-import SessionSidebar from '@/components/studio/session-sidebar';
-import PromptPanel from '@/components/studio/prompt-panel';
-import CanvasArea from '@/components/studio/canvas-area';
-import ChatHistoryPanel from '@/components/studio/chat-history-panel';
-import FullscreenModal from '@/components/studio/fullscreen-modal';
-
+  MangaStyle,
+  PanelBorderStyle,
+  PanelLayout,
+  ScreentoneDensity,
+} from '@/types';
+import { extractErrorMessage } from '@/utils/error-handler';
+import { cleanUserPrompt } from '@/utils/prompt-utils';
+import { generateId, normalizeSession, safeArray } from '@/utils/react-utils';
+import {
+  Download,
+  Eye,
+  Layers,
+  LogOut,
+  MessageSquare,
+  Settings,
+  Sparkles,
+  X,
+} from 'lucide-react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { toast } from 'sonner';
 
 const MangaGeneratorV2 = () => {
   const router = useRouter();
@@ -59,14 +70,17 @@ const MangaGeneratorV2 = () => {
     language: Language.ENGLISH,
     panelBorderStyle: PanelBorderStyle.FULL_BORDER,
     context: '',
-    autoContinueStory: true
+    autoContinueStory: true,
   });
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentImage, setCurrentImage] = useState<string | null>(null);
   const [batchLoading, setBatchLoading] = useState(false);
-  const [batchProgress, setBatchProgress] = useState<{ current: number; total: number } | null>(null);
+  const [batchProgress, setBatchProgress] = useState<{
+    current: number;
+    total: number;
+  } | null>(null);
   const [generationProgress, setGenerationProgress] = useState(0); // 0-100
   const [retryCount, setRetryCount] = useState(0); // Track retry attempts
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -84,7 +98,9 @@ const MangaGeneratorV2 = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
   const [showMobileSettings, setShowMobileSettings] = useState(false);
-  const [mobileTab, setMobileTab] = useState<'sessions' | 'settings' | 'prompt'>('sessions');
+  const [mobileTab, setMobileTab] = useState<
+    'sessions' | 'settings' | 'prompt'
+  >('sessions');
 
   const [leftWidth, setLeftWidth] = useState(320); // Sessions/History panel (20%)
   const [middleWidth, setMiddleWidth] = useState(640); // Prompt + Settings panel (40%)
@@ -96,10 +112,12 @@ const MangaGeneratorV2 = () => {
     title: 'New Chapter',
     pages: [],
     sessions: [],
-    currentSessionId: undefined
+    currentSessionId: undefined,
   });
 
-  const [currentSession, setCurrentSession] = useState<MangaSession | null>(null);
+  const [currentSession, setCurrentSession] = useState<MangaSession | null>(
+    null,
+  );
 
   // Set body overflow-hidden for studio page
   useEffect(() => {
@@ -154,13 +172,15 @@ const MangaGeneratorV2 = () => {
         ...(project.preferences || {}),
         leftWidth,
       };
-      setProject(prev => ({
+      setProject((prev) => ({
         ...prev,
         preferences: newPreferences,
       }));
-      updateProjectMeta(project.id, { preferences: newPreferences }).catch(err =>
-        console.error('Failed to update preferences (leftWidth)', err),
-      );
+      storageService
+        .updateProjectMeta(project.id, { preferences: newPreferences })
+        .catch((err) =>
+          console.error('Failed to update preferences (leftWidth)', err),
+        );
     }
   }, [leftWidth, project?.id]);
 
@@ -171,13 +191,15 @@ const MangaGeneratorV2 = () => {
         ...(project.preferences || {}),
         middleWidth,
       };
-      setProject(prev => ({
+      setProject((prev) => ({
         ...prev,
         preferences: newPreferences,
       }));
-      updateProjectMeta(project.id, { preferences: newPreferences }).catch(err =>
-        console.error('Failed to update preferences (middleWidth)', err),
-      );
+      storageService
+        .updateProjectMeta(project.id, { preferences: newPreferences })
+        .catch((err) =>
+          console.error('Failed to update preferences (middleWidth)', err),
+        );
     }
   }, [middleWidth, project?.id]);
 
@@ -234,141 +256,175 @@ const MangaGeneratorV2 = () => {
   useEffect(() => {
     const init = async () => {
       try {
-        const saved = await loadProject('default');
+        const saved = await storageService.loadProject('default');
         if (saved) {
           const normalizedProject = {
             ...saved,
             sessions: Array.isArray(saved.sessions) ? saved.sessions : [],
-            pages: Array.isArray(saved.pages) ? saved.pages : []
+            pages: Array.isArray(saved.pages) ? saved.pages : [],
           };
           setProject(normalizedProject);
           if (normalizedProject.currentSessionId) {
-            const session = normalizedProject.sessions.find(s => s.id === normalizedProject.currentSessionId);
+            const session = normalizedProject.sessions.find(
+              (s) => s.id === normalizedProject.currentSessionId,
+            );
             if (session) {
               const normalizedSession = normalizeSession({
                 ...session,
-                chatHistory: Array.isArray(session.chatHistory) ? session.chatHistory : [],
-                pages: Array.isArray(session.pages) ? session.pages : []
+                chatHistory: Array.isArray(session.chatHistory)
+                  ? session.chatHistory
+                  : [],
+                pages: Array.isArray(session.pages) ? session.pages : [],
               });
               setCurrentSession(normalizedSession);
               setContext(normalizedSession.context);
               // Load config from session (including storyDirection), or use default with context
               if (normalizedSession.config) {
-                setConfig({ ...normalizedSession.config, context: normalizedSession.context });
+                setConfig({
+                  ...normalizedSession.config,
+                  context: normalizedSession.context,
+                });
               } else {
-                setConfig(prev => ({ ...prev, context: normalizedSession.context }));
+                setConfig((prev) => ({
+                  ...prev,
+                  context: normalizedSession.context,
+                }));
               }
             }
           }
         }
       } catch (err) {
-        console.error("Failed to load project from MongoDB", err);
+        console.error('Failed to load project from MongoDB', err);
       }
     };
     init();
   }, []);
 
-  const createSession = useCallback((name: string) => {
-    const newSession: MangaSession = {
-      id: generateId(),
-      name,
-      context: context || '',
-      pages: [],
-      chatHistory: [],
-      config: { ...config },
-      createdAt: Date.now(),
-      updatedAt: Date.now()
-    };
+  const createSession = useCallback(
+    (name: string) => {
+      const newSession: MangaSession = {
+        id: generateId(),
+        name,
+        context: context || '',
+        pages: [],
+        chatHistory: [],
+        config: { ...config },
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      };
 
-    setCurrentSession(newSession);
-    setProject(prev => ({
-      ...prev,
-      sessions: [...safeArray(prev.sessions), newSession],
-      currentSessionId: newSession.id
-    }));
+      setCurrentSession(newSession);
+      setProject((prev) => ({
+        ...prev,
+        sessions: [...safeArray(prev.sessions), newSession],
+        currentSessionId: newSession.id,
+      }));
 
-    if (project && project.id) {
-      saveSession(project.id, newSession).catch(err =>
-        console.error('Failed to save new session', err),
-      );
-    }
-  }, [context, config, project?.id]);
-
-  const switchSession = useCallback((sessionId: string) => {
-    const session = safeArray(project.sessions).find(s => s.id === sessionId);
-    if (session) {
-      const normalizedSession = normalizeSession(session);
-      setCurrentSession(normalizedSession);
-      setContext(normalizedSession.context);
-      if (normalizedSession.config) {
-        setConfig({ ...normalizedSession.config, context: normalizedSession.context });
-      } else {
-        setConfig(prev => ({ ...prev, context: normalizedSession.context }));
+      if (project && project.id) {
+        storageService
+          .saveSession(project.id, newSession)
+          .catch((err) => console.error('Failed to save new session', err));
       }
-      setProject(prev => ({ ...prev, currentSessionId: sessionId }));
-    }
-  }, [project.sessions]);
+    },
+    [context, config, project?.id],
+  );
+
+  const switchSession = useCallback(
+    (sessionId: string) => {
+      const session = safeArray(project.sessions).find(
+        (s) => s.id === sessionId,
+      );
+      if (session) {
+        const normalizedSession = normalizeSession(session);
+        setCurrentSession(normalizedSession);
+        setContext(normalizedSession.context);
+        if (normalizedSession.config) {
+          setConfig({
+            ...normalizedSession.config,
+            context: normalizedSession.context,
+          });
+        } else {
+          setConfig((prev) => ({
+            ...prev,
+            context: normalizedSession.context,
+          }));
+        }
+        setProject((prev) => ({ ...prev, currentSessionId: sessionId }));
+      }
+    },
+    [project.sessions],
+  );
 
   // Debounce timer for context updates to prevent lag
   const contextUpdateTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Update config and save to session (including storyDirection)
-  const updateConfig = useCallback((newConfig: MangaConfig) => {
-    setConfig(newConfig);
-
-    if (currentSession) {
-      const updatedSession = {
-        ...currentSession,
-        config: { ...newConfig },
-        updatedAt: Date.now()
-      };
-      setCurrentSession(updatedSession);
-      setProject(prev => ({
-        ...prev,
-        sessions: safeArray(prev.sessions).map(s =>
-          s.id === currentSession.id ? updatedSession : s
-        )
-      }));
-    }
-  }, [currentSession]);
-
-  const updateSessionContext = useCallback((newContext: string) => {
-    try {
-      const maxContextLength = 10000;
-      const trimmedContext = newContext.length > maxContextLength
-        ? newContext.substring(0, maxContextLength)
-        : newContext;
-
-      setContext(trimmedContext);
-      const newConfig = { ...config, context: trimmedContext };
+  const updateConfig = useCallback(
+    (newConfig: MangaConfig) => {
       setConfig(newConfig);
 
-      if (contextUpdateTimerRef.current) {
-        clearTimeout(contextUpdateTimerRef.current);
+      if (currentSession) {
+        const updatedSession = {
+          ...currentSession,
+          config: { ...newConfig },
+          updatedAt: Date.now(),
+        };
+        setCurrentSession(updatedSession);
+        setProject((prev) => ({
+          ...prev,
+          sessions: safeArray(prev.sessions).map((s) =>
+            s.id === currentSession.id ? updatedSession : s,
+          ),
+        }));
       }
+    },
+    [currentSession],
+  );
 
-      contextUpdateTimerRef.current = setTimeout(() => {
-        if (currentSession) {
-          const updatedSession = {
-            ...currentSession,
-            context: trimmedContext,
-            config: { ...newConfig },
-            updatedAt: Date.now()
-          };
-          setCurrentSession(updatedSession);
-          setProject(prev => ({
-            ...prev,
-            sessions: safeArray(prev.sessions).map(s =>
-              s.id === currentSession.id ? updatedSession : s
-            )
-          }));
+  const updateSessionContext = useCallback(
+    (newContext: string) => {
+      try {
+        const maxContextLength = 10000;
+        const trimmedContext =
+          newContext.length > maxContextLength
+            ? newContext.substring(0, maxContextLength)
+            : newContext;
+
+        setContext(trimmedContext);
+        const newConfig = { ...config, context: trimmedContext };
+        setConfig(newConfig);
+
+        if (contextUpdateTimerRef.current) {
+          clearTimeout(contextUpdateTimerRef.current);
         }
-      }, 500);
-    } catch (error) {
-      console.error("Error updating context:", error);
-      setError(extractErrorMessage(error) || "Failed to update context. Please try again.");
-    }
-  }, [config, currentSession]);
+
+        contextUpdateTimerRef.current = setTimeout(() => {
+          if (currentSession) {
+            const updatedSession = {
+              ...currentSession,
+              context: trimmedContext,
+              config: { ...newConfig },
+              updatedAt: Date.now(),
+            };
+            setCurrentSession(updatedSession);
+            setProject((prev) => ({
+              ...prev,
+              sessions: safeArray(prev.sessions).map((s) =>
+                s.id === currentSession.id ? updatedSession : s,
+              ),
+            }));
+          }
+        }, 500);
+      } catch (error) {
+        console.error('Error updating context:', error);
+        setError(
+          extractErrorMessage(error) ||
+            'Failed to update context. Please try again.',
+        );
+      }
+    },
+    [config, currentSession],
+  );
 
   const confirmDeleteSession = (sessionId: string) => {
     setSessionToDelete(sessionId);
@@ -379,16 +435,17 @@ const MangaGeneratorV2 = () => {
     if (!sessionToDelete) return;
 
     const sessions = Array.isArray(project.sessions) ? project.sessions : [];
-    const sessionToRemove = sessions.find(s => s.id === sessionToDelete);
-    const filteredSessions = sessions.filter(s => s.id !== sessionToDelete);
+    const sessionToRemove = sessions.find((s) => s.id === sessionToDelete);
+    const filteredSessions = sessions.filter((s) => s.id !== sessionToDelete);
 
     // Get page IDs from the session being deleted
-    const pageIdsToDelete = sessionToRemove?.pages?.map(p => p.id) || [];
-    
+    const pageIdsToDelete = sessionToRemove?.pages?.map((p) => p.id) || [];
+
     // Get image URLs to delete from Cloudinary
-    const imageUrlsToDelete = sessionToRemove?.pages
-      ?.map(p => p.url)
-      .filter(url => url && !url.startsWith('data:image')) || [];
+    const imageUrlsToDelete =
+      sessionToRemove?.pages
+        ?.map((p) => p.url)
+        .filter((url) => url && !url.startsWith('data:image')) || [];
 
     if (currentSession?.id === sessionToDelete) {
       if (filteredSessions.length > 0) {
@@ -399,32 +456,37 @@ const MangaGeneratorV2 = () => {
       }
     }
 
-    setProject(prev => ({
+    setProject((prev) => ({
       ...prev,
       sessions: filteredSessions,
       // Also remove pages that belonged to this session from project.pages
-      pages: prev.pages.filter(p => !pageIdsToDelete.includes(p.id)),
-      currentSessionId: currentSession?.id === sessionToDelete ? (filteredSessions[0]?.id || undefined) : prev.currentSessionId
+      pages: prev.pages.filter((p) => !pageIdsToDelete.includes(p.id)),
+      currentSessionId:
+        currentSession?.id === sessionToDelete
+          ? filteredSessions[0]?.id || undefined
+          : prev.currentSessionId,
     }));
 
     // Backend delete
     if (project && project.id) {
       try {
         // Delete session from backend
-        await deleteSessionApi(project.id, sessionToDelete);
-        
+        await storageService.deleteSession(project.id, sessionToDelete);
+
         // Delete pages from backend
         if (pageIdsToDelete.length > 0) {
-          await deletePages(project.id, pageIdsToDelete);
+          await storageService.deletePages(project.id, pageIdsToDelete);
         }
-        
+
         // Delete images from Cloudinary
         if (imageUrlsToDelete.length > 0) {
-          await deleteImages(imageUrlsToDelete);
+          await storageService.deleteImages(imageUrlsToDelete);
         }
       } catch (err) {
         console.error('Failed to delete session on backend', err);
-        setError(extractErrorMessage(err) || 'Failed to delete session on server.');
+        setError(
+          extractErrorMessage(err) || 'Failed to delete session on server.',
+        );
       }
     }
 
@@ -444,7 +506,7 @@ const MangaGeneratorV2 = () => {
     // Also delete from backend database
     if (project && project.id) {
       try {
-        await deletePages(project.id, [pageToDelete]);
+        await storageService.deletePages(project.id, [pageToDelete]);
       } catch (err) {
         console.error('Failed to delete page on backend', err);
       }
@@ -466,7 +528,7 @@ const MangaGeneratorV2 = () => {
     await removePages(ids);
     if (project && project.id) {
       try {
-        await deletePages(project.id, ids);
+        await storageService.deletePages(project.id, ids);
       } catch (err) {
         console.error('Failed to delete pages on backend', err);
       }
@@ -505,20 +567,22 @@ const MangaGeneratorV2 = () => {
         pages: [],
         chatHistory: [],
         createdAt: Date.now(),
-        updatedAt: Date.now()
+        updatedAt: Date.now(),
       };
       workingSession = newSession;
       setCurrentSession(newSession);
-      setProject(prev => ({
+      setProject((prev) => ({
         ...prev,
-        sessions: Array.isArray(prev.sessions) ? [...prev.sessions, newSession] : [newSession],
-        currentSessionId: newSessionId
+        sessions: Array.isArray(prev.sessions)
+          ? [...prev.sessions, newSession]
+          : [newSession],
+        currentSessionId: newSessionId,
       }));
       if (project && project.id) {
         // Single save is enough for both single-generate and batch flows
-        saveSession(project.id, newSession).catch(err =>
-          console.error('Failed to save new session', err),
-        );
+        storageService
+          .saveSession(project.id, newSession)
+          .catch((err) => console.error('Failed to save new session', err));
       }
     }
 
@@ -529,27 +593,29 @@ const MangaGeneratorV2 = () => {
 
     // Clean user prompt before using it
     const cleanedUserPrompt = prompt ? cleanUserPrompt(prompt) : '';
-    const finalPrompt = cleanedUserPrompt || (isAutoContinue ? 'Continue the story naturally' : '');
+    const finalPrompt =
+      cleanedUserPrompt ||
+      (isAutoContinue ? 'Continue the story naturally' : '');
 
     const userMessage = {
       id: generateId(),
       role: 'user' as const,
       content: finalPrompt,
       timestamp: Date.now(),
-      config: { ...config, context: context || config.context }
+      config: { ...config, context: context || config.context },
     };
 
     const sessionWithUserMessage = {
       ...workingSession,
       chatHistory: [...(workingSession.chatHistory || []), userMessage],
-      updatedAt: Date.now()
+      updatedAt: Date.now(),
     };
     setCurrentSession(sessionWithUserMessage);
-    setProject(prev => ({
+    setProject((prev) => ({
       ...prev,
-      sessions: (Array.isArray(prev.sessions) ? prev.sessions : []).map(s =>
-        s.id === workingSession.id ? sessionWithUserMessage : s
-      )
+      sessions: (Array.isArray(prev.sessions) ? prev.sessions : []).map((s) =>
+        s.id === workingSession.id ? sessionWithUserMessage : s,
+      ),
     }));
 
     // Simulate progress
@@ -558,10 +624,10 @@ const MangaGeneratorV2 = () => {
       if (progressIntervalRef.current) {
         clearInterval(progressIntervalRef.current);
       }
-      
+
       setGenerationProgress(0);
       let currentProgress = 0;
-      
+
       // Simulate progress: start fast, slow down near the end
       progressIntervalRef.current = setInterval(() => {
         if (currentProgress < 90) {
@@ -586,23 +652,29 @@ const MangaGeneratorV2 = () => {
 
     try {
       const sessionHistory = workingSession.pages || [];
-      const configWithContext = { ...config, context: context || config.context };
+      const configWithContext = {
+        ...config,
+        context: context || config.context,
+      };
       // Get selected reference page IDs from session
-      const selectedReferencePageIds = workingSession.selectedReferencePageIds || [];
+      const selectedReferencePageIds =
+        workingSession.selectedReferencePageIds || [];
       // Use cleaned prompt for generation
       const imageUrl = await generateMangaImage(
-        finalPrompt, 
-        configWithContext, 
+        finalPrompt,
+        configWithContext,
         sessionHistory,
-        selectedReferencePageIds.length > 0 ? selectedReferencePageIds : undefined
+        selectedReferencePageIds.length > 0
+          ? selectedReferencePageIds
+          : undefined,
       );
-      
+
       // Complete progress to 100%
       setGenerationProgress(100);
-      
+
       // Small delay to show 100% before hiding
-      await new Promise(resolve => setTimeout(resolve, 300));
-      
+      await new Promise((resolve) => setTimeout(resolve, 300));
+
       setCurrentImage(imageUrl);
 
       const assistantMessage = {
@@ -611,39 +683,40 @@ const MangaGeneratorV2 = () => {
         content: 'Generated manga page',
         imageUrl: imageUrl,
         timestamp: Date.now(),
-        config: configWithContext
+        config: configWithContext,
       };
 
       const finalSession = {
         ...sessionWithUserMessage,
         chatHistory: [...sessionWithUserMessage.chatHistory, assistantMessage],
-        updatedAt: Date.now()
+        updatedAt: Date.now(),
       };
       setCurrentSession(finalSession);
-      setProject(prev => ({
+      setProject((prev) => ({
         ...prev,
-        sessions: (Array.isArray(prev.sessions) ? prev.sessions : []).map(s =>
-          s.id === workingSession.id ? finalSession : s
-        )
+        sessions: (Array.isArray(prev.sessions) ? prev.sessions : []).map(
+          (s) => (s.id === workingSession.id ? finalSession : s),
+        ),
       }));
     } catch (err: any) {
-      const errorMessage = err?.message || "Failed to generate manga. Please try again.";
+      const errorMessage =
+        err?.message || 'Failed to generate manga. Please try again.';
       const finalRetryCount = err?.retryCount || 0;
       const maxRetries = err?.maxRetries || 5;
-      
+
       // Show toast notification with retry info
       if (finalRetryCount >= maxRetries) {
-        toast.error("Generation Failed", {
+        toast.error('Generation Failed', {
           description: `Đã thử ${finalRetryCount} lần nhưng không thể tạo ảnh. ${errorMessage.includes('PROHIBITED_CONTENT') || errorMessage.includes('IMAGE_SAFETY') ? 'Prompt có thể vi phạm chính sách nội dung. Vui lòng thử lại với prompt khác.' : 'Vui lòng thử lại sau.'}`,
           duration: 6000,
         });
       } else {
-        toast.error("Generation Failed", {
+        toast.error('Generation Failed', {
           description: errorMessage,
           duration: 4000,
         });
       }
-      
+
       setError(errorMessage);
     } finally {
       // Clear progress interval
@@ -662,12 +735,16 @@ const MangaGeneratorV2 = () => {
     // Guard: Prevent multiple simultaneous batch generations
     // Check guard FIRST before any other operations
     if (batchGeneratingRef.current) {
-      console.warn('⚠️ Batch generation already in progress (batchGeneratingRef), ignoring duplicate call');
+      console.warn(
+        '⚠️ Batch generation already in progress (batchGeneratingRef), ignoring duplicate call',
+      );
       return;
     }
 
     if (batchLoading) {
-      console.warn('⚠️ Batch generation already in progress (batchLoading), ignoring duplicate call');
+      console.warn(
+        '⚠️ Batch generation already in progress (batchLoading), ignoring duplicate call',
+      );
       return;
     }
 
@@ -690,7 +767,9 @@ const MangaGeneratorV2 = () => {
 
     // Set unique ID for tracking
     const batchId = generateId();
-    console.log(`🚀 Starting batch generation [${batchId}]: ${totalPages} pages`);
+    console.log(
+      `🚀 Starting batch generation [${batchId}]: ${totalPages} pages`,
+    );
 
     let workingSession = currentSession;
     if (!workingSession) {
@@ -702,14 +781,16 @@ const MangaGeneratorV2 = () => {
         pages: [],
         chatHistory: [],
         createdAt: Date.now(),
-        updatedAt: Date.now()
+        updatedAt: Date.now(),
       };
       workingSession = newSession;
       setCurrentSession(newSession);
-      setProject(prev => ({
+      setProject((prev) => ({
         ...prev,
-        sessions: Array.isArray(prev.sessions) ? [...prev.sessions, newSession] : [newSession],
-        currentSessionId: newSessionId
+        sessions: Array.isArray(prev.sessions)
+          ? [...prev.sessions, newSession]
+          : [newSession],
+        currentSessionId: newSessionId,
       }));
     }
 
@@ -727,16 +808,20 @@ const MangaGeneratorV2 = () => {
     let localSession: MangaSession = {
       ...workingSession,
       pages: [...(workingSession.pages || [])],
-      chatHistory: [...(workingSession.chatHistory || [])]
+      chatHistory: [...(workingSession.chatHistory || [])],
     };
 
-    console.log(`📊 [Batch ${batchId}] Initial session state: ${localSession.pages.length} pages`);
+    console.log(
+      `📊 [Batch ${batchId}] Initial session state: ${localSession.pages.length} pages`,
+    );
 
     for (let i = 0; i < totalPages; i++) {
       if (batchCancelledRef.current) {
         setBatchLoading(false);
         setBatchProgress(null);
-        setError(`Batch cancelled. Generated ${generatedCount} of ${totalPages} pages.`);
+        setError(
+          `Batch cancelled. Generated ${generatedCount} of ${totalPages} pages.`,
+        );
         return;
       }
 
@@ -745,12 +830,14 @@ const MangaGeneratorV2 = () => {
         const sessionHistory = localSession.pages || [];
 
         // Log current state for debugging
-        console.log(`📄 [Batch ${batchId}] Generating page ${i + 1}/${totalPages}. Current session has ${sessionHistory.length} pages.`);
+        console.log(
+          `📄 [Batch ${batchId}] Generating page ${i + 1}/${totalPages}. Current session has ${sessionHistory.length} pages.`,
+        );
 
         const configWithContext = {
           ...config,
           context: context || config.context,
-          autoContinueStory: false // Don't use auto-continue, we have explicit prompts now
+          autoContinueStory: false, // Don't use auto-continue, we have explicit prompts now
         };
 
         // STEP 1: Generate prompt for this page (except first page)
@@ -760,7 +847,9 @@ const MangaGeneratorV2 = () => {
             setBatchLoading(false);
             setBatchProgress(null);
             batchGeneratingRef.current = false;
-            setError(`Batch cancelled. Generated ${generatedCount} of ${totalPages} pages.`);
+            setError(
+              `Batch cancelled. Generated ${generatedCount} of ${totalPages} pages.`,
+            );
             return;
           }
 
@@ -769,14 +858,16 @@ const MangaGeneratorV2 = () => {
           const actualPageNumber = sessionHistory.length + 1;
           setBatchProgress({ current: i, total: totalPages });
 
-          console.log(`🤖 [Batch ${batchId}] Generating prompt for page ${actualPageNumber} (iteration ${i + 1})`);
+          console.log(
+            `🤖 [Batch ${batchId}] Generating prompt for page ${actualPageNumber} (iteration ${i + 1})`,
+          );
           currentPrompt = await generateNextPrompt(
             sessionHistory,
             context || config.context || '',
             originalPrompt,
             actualPageNumber,
             totalPages,
-            configWithContext
+            configWithContext,
           );
 
           // Check cancel after API call
@@ -784,13 +875,21 @@ const MangaGeneratorV2 = () => {
             setBatchLoading(false);
             setBatchProgress(null);
             batchGeneratingRef.current = false;
-            setError(`Batch cancelled. Generated ${generatedCount} of ${totalPages} pages.`);
+            setError(
+              `Batch cancelled. Generated ${generatedCount} of ${totalPages} pages.`,
+            );
             return;
           }
 
-          console.log(`✅ [Batch ${batchId}] AI Generated Prompt for Page ${actualPageNumber}:`, currentPrompt);
+          console.log(
+            `✅ [Batch ${batchId}] AI Generated Prompt for Page ${actualPageNumber}:`,
+            currentPrompt,
+          );
         } else {
-          console.log(`✅ [Batch ${batchId}] Using original prompt for Page 1:`, currentPrompt);
+          console.log(
+            `✅ [Batch ${batchId}] Using original prompt for Page 1:`,
+            currentPrompt,
+          );
         }
 
         // STEP 2: Generate image using the prompt (with retry)
@@ -803,26 +902,35 @@ const MangaGeneratorV2 = () => {
           if (batchCancelledRef.current) {
             setBatchLoading(false);
             setBatchProgress(null);
-            setError(`Batch cancelled. Generated ${generatedCount} of ${totalPages} pages.`);
+            setError(
+              `Batch cancelled. Generated ${generatedCount} of ${totalPages} pages.`,
+            );
             return;
           }
 
           try {
-            console.log(`🖼️ [Batch ${batchId}] Generating image for page ${i + 1} (session has ${sessionHistory.length} pages)...`);
+            console.log(
+              `🖼️ [Batch ${batchId}] Generating image for page ${i + 1} (session has ${sessionHistory.length} pages)...`,
+            );
             // Get selected reference page IDs from current session
-            const selectedReferencePageIds = currentSession?.selectedReferencePageIds || [];
+            const selectedReferencePageIds =
+              currentSession?.selectedReferencePageIds || [];
             imageUrl = await generateMangaImage(
-              currentPrompt, 
-              configWithContext, 
+              currentPrompt,
+              configWithContext,
               sessionHistory,
-              selectedReferencePageIds.length > 0 ? selectedReferencePageIds : undefined
+              selectedReferencePageIds.length > 0
+                ? selectedReferencePageIds
+                : undefined,
             );
 
             // Check cancel after API call
             if (batchCancelledRef.current) {
               setBatchLoading(false);
               setBatchProgress(null);
-              setError(`Batch cancelled. Generated ${generatedCount} of ${totalPages} pages.`);
+              setError(
+                `Batch cancelled. Generated ${generatedCount} of ${totalPages} pages.`,
+              );
               return;
             }
           } catch (err) {
@@ -830,15 +938,19 @@ const MangaGeneratorV2 = () => {
             if (batchCancelledRef.current) {
               setBatchLoading(false);
               setBatchProgress(null);
-              setError(`Batch cancelled. Generated ${generatedCount} of ${totalPages} pages.`);
+              setError(
+                `Batch cancelled. Generated ${generatedCount} of ${totalPages} pages.`,
+              );
               return;
             }
 
             lastError = err as Error;
             retries--;
             if (retries > 0 && !batchCancelledRef.current) {
-              console.log(`Retrying page ${i + 1}... (${retries} attempts left)`);
-              await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2s before retry
+              console.log(
+                `Retrying page ${i + 1}... (${retries} attempts left)`,
+              );
+              await new Promise((resolve) => setTimeout(resolve, 2000)); // Wait 2s before retry
             }
           }
         }
@@ -847,12 +959,19 @@ const MangaGeneratorV2 = () => {
         if (batchCancelledRef.current) {
           setBatchLoading(false);
           setBatchProgress(null);
-          setError(`Batch cancelled. Generated ${generatedCount} of ${totalPages} pages.`);
+          setError(
+            `Batch cancelled. Generated ${generatedCount} of ${totalPages} pages.`,
+          );
           return;
         }
 
         if (!imageUrl) {
-          throw lastError || new Error(`Failed to generate image for page ${i + 1} after 3 attempts`);
+          throw (
+            lastError ||
+            new Error(
+              `Failed to generate image for page ${i + 1} after 3 attempts`,
+            )
+          );
         }
 
         // Create page object
@@ -862,20 +981,22 @@ const MangaGeneratorV2 = () => {
           prompt: currentPrompt, // Use the actual prompt (original or AI-generated)
           timestamp: Date.now(),
           config: configWithContext,
-          markedForExport: true
+          markedForExport: true,
         };
 
         // Update local session - CRITICAL: Always use spread to create new array
         localSession = {
           ...localSession,
           pages: [...localSession.pages, newPage],
-          updatedAt: Date.now()
+          updatedAt: Date.now(),
         };
 
-        console.log(`✅ [Batch ${batchId}] Page ${i + 1} generated successfully. Session now has ${localSession.pages.length} pages.`);
+        console.log(
+          `✅ [Batch ${batchId}] Page ${i + 1} generated successfully. Session now has ${localSession.pages.length} pages.`,
+        );
 
         // Update React state - use functional updates to avoid race conditions
-        setCurrentSession(prevSession => {
+        setCurrentSession((prevSession) => {
           // Only update if this is still the current session
           if (prevSession?.id === sessionId) {
             return localSession;
@@ -883,10 +1004,14 @@ const MangaGeneratorV2 = () => {
           return prevSession;
         });
 
-        setProject(prev => {
+        setProject((prev) => {
           // Use functional update to ensure we're working with latest state
-          const currentSessions = Array.isArray(prev.sessions) ? prev.sessions : [];
-          const sessionIndex = currentSessions.findIndex(s => s.id === sessionId);
+          const currentSessions = Array.isArray(prev.sessions)
+            ? prev.sessions
+            : [];
+          const sessionIndex = currentSessions.findIndex(
+            (s) => s.id === sessionId,
+          );
 
           // Only update if session still exists
           if (sessionIndex === -1) {
@@ -899,16 +1024,23 @@ const MangaGeneratorV2 = () => {
           return {
             ...prev,
             pages: [...prev.pages, newPage],
-            sessions: updatedSessions
+            sessions: updatedSessions,
           };
         });
 
         // Persist new page to backend and WAIT for it to complete so refresh (F5) doesn't cancel the save.
         if (project && project.id) {
           try {
-            await addPageToSession(project.id, sessionId, newPage);
+            await storageService.addPageToSession(
+              project.id,
+              sessionId,
+              newPage,
+            );
           } catch (err) {
-            console.error('Failed to persist batch-generated page to backend', err);
+            console.error(
+              'Failed to persist batch-generated page to backend',
+              err,
+            );
           }
         }
 
@@ -918,11 +1050,13 @@ const MangaGeneratorV2 = () => {
 
         // Small delay between generations to avoid overwhelming the API
         if (i < totalPages - 1 && !batchCancelledRef.current) {
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          await new Promise((resolve) => setTimeout(resolve, 1000));
         }
       } catch (err) {
         console.error(`Error generating page ${i + 1}:`, err);
-        setError(`Failed at page ${i + 1}. Successfully generated ${generatedCount} pages.`);
+        setError(
+          `Failed at page ${i + 1}. Successfully generated ${generatedCount} pages.`,
+        );
         setBatchLoading(false);
         setBatchProgress(null);
         batchGeneratingRef.current = false; // Release guard on error
@@ -940,7 +1074,9 @@ const MangaGeneratorV2 = () => {
 
     // Release guard
     batchGeneratingRef.current = false;
-    console.log(`🏁 [Batch ${batchId}] Batch generation completed. Generated ${generatedCount} pages.`);
+    console.log(
+      `🏁 [Batch ${batchId}] Batch generation completed. Generated ${generatedCount} pages.`,
+    );
   };
 
   const cancelBatchGenerate = () => {
@@ -961,12 +1097,14 @@ const MangaGeneratorV2 = () => {
       prompt,
       timestamp: Date.now(),
       config: { ...config, context: context || config.context },
-      markedForExport: markForExport
+      markedForExport: markForExport,
     };
 
     // Build updated objects explicitly so we can persist the same payload we render.
     const baseProject = project;
-    const sessions = Array.isArray(baseProject.sessions) ? baseProject.sessions : [];
+    const sessions = Array.isArray(baseProject.sessions)
+      ? baseProject.sessions
+      : [];
 
     let updatedProject: MangaProject;
     let updatedSession: MangaSession | null = null;
@@ -975,13 +1113,15 @@ const MangaGeneratorV2 = () => {
       updatedSession = {
         ...currentSession,
         pages: [...currentSession.pages, newPage],
-        updatedAt: Date.now()
+        updatedAt: Date.now(),
       };
 
       updatedProject = {
         ...baseProject,
         pages: [...baseProject.pages, newPage],
-        sessions: sessions.map(s => (s.id === currentSession.id ? updatedSession! : s)),
+        sessions: sessions.map((s) =>
+          s.id === currentSession.id ? updatedSession! : s,
+        ),
         currentSessionId: baseProject.currentSessionId ?? currentSession.id,
       };
 
@@ -999,9 +1139,11 @@ const MangaGeneratorV2 = () => {
     }
 
     // Persist to backend. Note: repo currently only implements /api/projects, so we use saveProject.
-    saveProject(updatedProject).catch(err =>
-      console.error('Failed to persist project after ADD TO PDF', err),
-    );
+    storageService
+      .saveProject(updatedProject)
+      .catch((err) =>
+        console.error('Failed to persist project after ADD TO PDF', err),
+      );
 
     setCurrentImage(null);
     setPrompt('');
@@ -1010,76 +1152,90 @@ const MangaGeneratorV2 = () => {
 
   const toggleMarkForExport = (id: string) => {
     if (currentSession) {
-      const updatedPages = currentSession.pages.map(p =>
-        p.id === id ? { ...p, markedForExport: !p.markedForExport } : p
+      const updatedPages = currentSession.pages.map((p) =>
+        p.id === id ? { ...p, markedForExport: !p.markedForExport } : p,
       );
       const updatedSession = {
         ...currentSession,
         pages: updatedPages,
-        updatedAt: Date.now()
+        updatedAt: Date.now(),
       };
       setCurrentSession(updatedSession);
-      setProject(prev => ({
+      setProject((prev) => ({
         ...prev,
-        pages: prev.pages.map(p => p.id === id ? { ...p, markedForExport: !p.markedForExport } : p),
-        sessions: (Array.isArray(prev.sessions) ? prev.sessions : []).map(s => s.id === currentSession.id ? updatedSession : s)
+        pages: prev.pages.map((p) =>
+          p.id === id ? { ...p, markedForExport: !p.markedForExport } : p,
+        ),
+        sessions: (Array.isArray(prev.sessions) ? prev.sessions : []).map(
+          (s) => (s.id === currentSession.id ? updatedSession : s),
+        ),
       }));
     } else {
-      setProject(prev => ({
+      setProject((prev) => ({
         ...prev,
-        pages: prev.pages.map(p => p.id === id ? { ...p, markedForExport: !p.markedForExport } : p)
+        pages: prev.pages.map((p) =>
+          p.id === id ? { ...p, markedForExport: !p.markedForExport } : p,
+        ),
       }));
     }
   };
 
   const toggleReferencePage = (pageId: string) => {
     if (!currentSession) return;
-    
+
     const currentReferenceIds = currentSession.selectedReferencePageIds || [];
     const isCurrentlyReference = currentReferenceIds.includes(pageId);
-    
+
     const updatedReferenceIds = isCurrentlyReference
-      ? currentReferenceIds.filter(id => id !== pageId)
+      ? currentReferenceIds.filter((id) => id !== pageId)
       : [...currentReferenceIds, pageId];
-    
+
     const updatedSession = {
       ...currentSession,
       selectedReferencePageIds: updatedReferenceIds,
-      updatedAt: Date.now()
+      updatedAt: Date.now(),
     };
-    
+
     setCurrentSession(updatedSession);
-    setProject(prev => ({
+    setProject((prev) => ({
       ...prev,
-      sessions: (Array.isArray(prev.sessions) ? prev.sessions : []).map(s =>
-        s.id === currentSession.id ? updatedSession : s
-      )
+      sessions: (Array.isArray(prev.sessions) ? prev.sessions : []).map((s) =>
+        s.id === currentSession.id ? updatedSession : s,
+      ),
     }));
-    
+
     if (project && project.id) {
-      saveSession(project.id, updatedSession).catch(err =>
-        console.error('Failed to save session after toggle reference page', err),
-      );
+      storageService
+        .saveSession(project.id, updatedSession)
+        .catch((err) =>
+          console.error(
+            'Failed to save session after toggle reference page',
+            err,
+          ),
+        );
     }
-    
-    toast.success(isCurrentlyReference ? "Removed from reference" : "Set as reference", {
-      description: `This page will ${isCurrentlyReference ? 'no longer' : 'now'} be used for character consistency when continuing the story.`,
-      duration: 3000,
-    });
+
+    toast.success(
+      isCurrentlyReference ? 'Removed from reference' : 'Set as reference',
+      {
+        description: `This page will ${isCurrentlyReference ? 'no longer' : 'now'} be used for character consistency when continuing the story.`,
+        duration: 3000,
+      },
+    );
   };
 
   const removePage = async (id: string) => {
     if (!id) return;
 
     // Find page to get image ID for deletion
-    const pageToDelete = currentSession?.pages.find(p => p.id === id) ||
-      project.pages.find(p => p.id === id);
+    const pageToDelete =
+      currentSession?.pages.find((p) => p.id === id) ||
+      project.pages.find((p) => p.id === id);
 
     // Delete image from backend (MongoDB or Cloudinary)
     if (pageToDelete?.url && !pageToDelete.url.startsWith('data:image')) {
       try {
-        const { deleteImage } = await import('@/lib/services/storage-service');
-        await deleteImage(pageToDelete.url);
+        await storageService.deleteImage(pageToDelete.url);
       } catch (error) {
         console.error('Failed to delete image:', error);
         // Continue with page removal even if image delete fails
@@ -1088,27 +1244,29 @@ const MangaGeneratorV2 = () => {
 
     if (currentSession) {
       // Filter out the page to delete
-      const remainingPages = currentSession.pages.filter(p => p.id !== id);
+      const remainingPages = currentSession.pages.filter((p) => p.id !== id);
 
       // Create updated session - KEEP the session even if it has no pages
       const updatedSession = {
         ...currentSession,
         pages: remainingPages,
-        updatedAt: Date.now()
+        updatedAt: Date.now(),
       };
 
       // Update current session state
       setCurrentSession(updatedSession);
 
       // Update project state - ensure session is preserved
-      setProject(prev => {
+      setProject((prev) => {
         const sessions = Array.isArray(prev.sessions) ? prev.sessions : [];
-        const updatedSessions = sessions.map(s =>
-          s.id === currentSession.id ? updatedSession : s
+        const updatedSessions = sessions.map((s) =>
+          s.id === currentSession.id ? updatedSession : s,
         );
 
         // Ensure the session still exists in the updated sessions array
-        const sessionStillExists = updatedSessions.some(s => s.id === currentSession.id);
+        const sessionStillExists = updatedSessions.some(
+          (s) => s.id === currentSession.id,
+        );
         if (!sessionStillExists) {
           // If session was somehow removed, add it back
           updatedSessions.push(updatedSession);
@@ -1116,17 +1274,20 @@ const MangaGeneratorV2 = () => {
 
         return {
           ...prev,
-          pages: prev.pages.filter(p => p.id !== id),
+          pages: prev.pages.filter((p) => p.id !== id),
           sessions: updatedSessions,
           // Preserve currentSessionId if it matches
-          currentSessionId: prev.currentSessionId === currentSession.id ? currentSession.id : prev.currentSessionId
+          currentSessionId:
+            prev.currentSessionId === currentSession.id
+              ? currentSession.id
+              : prev.currentSessionId,
         };
       });
     } else {
       // No current session - just remove from project pages
-      setProject(prev => ({
+      setProject((prev) => ({
         ...prev,
-        pages: prev.pages.filter(p => p.id !== id)
+        pages: prev.pages.filter((p) => p.id !== id),
       }));
     }
   };
@@ -1136,20 +1297,23 @@ const MangaGeneratorV2 = () => {
 
     // Find pages to get image IDs for deletion
     const pagesToDelete = [
-      ...(currentSession?.pages.filter(p => ids.includes(p.id)) || []),
-      ...project.pages.filter(p => ids.includes(p.id) && !currentSession?.pages.some(sp => sp.id === p.id))
+      ...(currentSession?.pages.filter((p) => ids.includes(p.id)) || []),
+      ...project.pages.filter(
+        (p) =>
+          ids.includes(p.id) &&
+          !currentSession?.pages.some((sp) => sp.id === p.id),
+      ),
     ];
 
     // Collect image URLs to delete (exclude base64)
     const imageUrlsToDelete = pagesToDelete
-      .map(p => p.url)
-      .filter(url => url && !url.startsWith('data:image'));
+      .map((p) => p.url)
+      .filter((url) => url && !url.startsWith('data:image'));
 
     // Delete images from backend (MongoDB or Cloudinary)
     if (imageUrlsToDelete.length > 0) {
       try {
-        const { deleteImages } = await import('@/lib/services/storage-service');
-        await deleteImages(imageUrlsToDelete);
+        await storageService.deleteImages(imageUrlsToDelete);
       } catch (error) {
         console.error('Failed to delete images:', error);
         // Continue with page removal even if image delete fails
@@ -1158,27 +1322,31 @@ const MangaGeneratorV2 = () => {
 
     if (currentSession) {
       // Filter out the pages to delete
-      const remainingPages = currentSession.pages.filter(p => !ids.includes(p.id));
+      const remainingPages = currentSession.pages.filter(
+        (p) => !ids.includes(p.id),
+      );
 
       // Create updated session - KEEP the session even if it has no pages
       const updatedSession = {
         ...currentSession,
         pages: remainingPages,
-        updatedAt: Date.now()
+        updatedAt: Date.now(),
       };
 
       // Update current session state
       setCurrentSession(updatedSession);
 
       // Update project state - ensure session is preserved
-      setProject(prev => {
+      setProject((prev) => {
         const sessions = Array.isArray(prev.sessions) ? prev.sessions : [];
-        const updatedSessions = sessions.map(s =>
-          s.id === currentSession.id ? updatedSession : s
+        const updatedSessions = sessions.map((s) =>
+          s.id === currentSession.id ? updatedSession : s,
         );
 
         // Ensure the session still exists in the updated sessions array
-        const sessionStillExists = updatedSessions.some(s => s.id === currentSession.id);
+        const sessionStillExists = updatedSessions.some(
+          (s) => s.id === currentSession.id,
+        );
         if (!sessionStillExists) {
           // If session was somehow removed, add it back
           updatedSessions.push(updatedSession);
@@ -1186,17 +1354,20 @@ const MangaGeneratorV2 = () => {
 
         return {
           ...prev,
-          pages: prev.pages.filter(p => !ids.includes(p.id)),
+          pages: prev.pages.filter((p) => !ids.includes(p.id)),
           sessions: updatedSessions,
           // Preserve currentSessionId if it matches
-          currentSessionId: prev.currentSessionId === currentSession.id ? currentSession.id : prev.currentSessionId
+          currentSessionId:
+            prev.currentSessionId === currentSession.id
+              ? currentSession.id
+              : prev.currentSessionId,
         };
       });
     } else {
       // No current session - just remove from project pages
-      setProject(prev => ({
+      setProject((prev) => ({
         ...prev,
-        pages: prev.pages.filter(p => !ids.includes(p.id))
+        pages: prev.pages.filter((p) => !ids.includes(p.id)),
       }));
     }
   };
@@ -1204,43 +1375,51 @@ const MangaGeneratorV2 = () => {
   const movePage = (id: string, direction: 'up' | 'down') => {
     if (currentSession) {
       const pages = currentSession.pages;
-      const index = pages.findIndex(p => p.id === id);
+      const index = pages.findIndex((p) => p.id === id);
       if (index === -1) return;
       const newPages = [...pages];
       const newIndex = direction === 'up' ? index - 1 : index + 1;
       if (newIndex < 0 || newIndex >= newPages.length) return;
-      [newPages[index], newPages[newIndex]] = [newPages[newIndex], newPages[index]];
+      [newPages[index], newPages[newIndex]] = [
+        newPages[newIndex],
+        newPages[index],
+      ];
 
       const updatedSession = {
         ...currentSession,
         pages: newPages,
-        updatedAt: Date.now()
+        updatedAt: Date.now(),
       };
       setCurrentSession(updatedSession);
-      setProject(prev => ({
+      setProject((prev) => ({
         ...prev,
-        sessions: (Array.isArray(prev.sessions) ? prev.sessions : []).map(s => s.id === currentSession.id ? updatedSession : s)
+        sessions: (Array.isArray(prev.sessions) ? prev.sessions : []).map(
+          (s) => (s.id === currentSession.id ? updatedSession : s),
+        ),
       }));
     } else {
       const pages = project.pages;
-      const index = pages.findIndex(p => p.id === id);
+      const index = pages.findIndex((p) => p.id === id);
       if (index === -1) return;
       const newPages = [...pages];
       const newIndex = direction === 'up' ? index - 1 : index + 1;
       if (newIndex < 0 || newIndex >= newPages.length) return;
-      [newPages[index], newPages[newIndex]] = [newPages[newIndex], newPages[index]];
-      setProject(prev => ({ ...prev, pages: newPages }));
+      [newPages[index], newPages[newIndex]] = [
+        newPages[newIndex],
+        newPages[index],
+      ];
+      setProject((prev) => ({ ...prev, pages: newPages }));
     }
   };
 
-  const pagesToShow = useMemo(() =>
-    currentSession ? currentSession.pages : project.pages,
-    [currentSession, project.pages]
+  const pagesToShow = useMemo(
+    () => (currentSession ? currentSession.pages : project.pages),
+    [currentSession, project.pages],
   );
 
-  const exportCount = useMemo(() =>
-    pagesToShow.filter(p => p.markedForExport).length,
-    [pagesToShow]
+  const exportCount = useMemo(
+    () => pagesToShow.filter((p) => p.markedForExport).length,
+    [pagesToShow],
   );
 
   return (
@@ -1248,7 +1427,10 @@ const MangaGeneratorV2 = () => {
       {/* Top Header - Đồng bộ với landing page */}
       <header className="h-14 sm:h-16 border-b border-zinc-800/50 bg-zinc-950/95 backdrop-blur-md flex items-center justify-between px-3 sm:px-4 lg:px-8 flex-shrink-0 shadow-lg shadow-black/20 sticky top-0 z-30">
         <div className="flex items-center gap-2 sm:gap-3 lg:gap-6 min-w-0 flex-1">
-          <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity flex-shrink-0">
+          <Link
+            href="/"
+            className="flex items-center gap-2 hover:opacity-80 transition-opacity flex-shrink-0"
+          >
             <div className="w-8 h-8 sm:w-10 sm:h-10 overflow-hidden rounded-lg border border-zinc-800/50 bg-white/5 flex items-center justify-center ring-1 ring-zinc-700/30">
               <img
                 src="/logo.png"
@@ -1262,11 +1444,19 @@ const MangaGeneratorV2 = () => {
           </Link>
           {currentSession && (
             <div className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 bg-zinc-900/60 rounded-lg border border-zinc-800/60 backdrop-blur-sm shadow-sm ring-1 ring-zinc-700/20 flex-shrink-0 min-w-0">
-              <Layers size={12} className="sm:w-3.5 sm:h-3.5 text-amber-400 flex-shrink-0" />
-              <span className="text-[10px] sm:text-xs font-semibold text-zinc-200 truncate" style={{ fontFamily: 'var(--font-inter)' }}>
+              <Layers
+                size={12}
+                className="sm:w-3.5 sm:h-3.5 text-amber-400 flex-shrink-0"
+              />
+              <span
+                className="text-[10px] sm:text-xs font-semibold text-zinc-200 truncate"
+                style={{ fontFamily: 'var(--font-inter)' }}
+              >
                 {currentSession.name}
               </span>
-              <span className="text-[9px] sm:text-[10px] text-zinc-500 font-medium flex-shrink-0">({currentSession.pages.length})</span>
+              <span className="text-[9px] sm:text-[10px] text-zinc-500 font-medium flex-shrink-0">
+                ({currentSession.pages.length})
+              </span>
             </div>
           )}
         </div>
@@ -1301,12 +1491,17 @@ const MangaGeneratorV2 = () => {
             className="p-2 sm:p-2.5 rounded-lg hover:bg-zinc-800/60 active:bg-zinc-800 transition-all relative group touch-manipulation"
             title="Chat History"
           >
-            <MessageSquare size={18} className="sm:w-5 sm:h-5 text-zinc-300 group-hover:text-amber-400 transition-colors" />
-            {currentSession && currentSession.chatHistory && currentSession.chatHistory.length > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-gradient-to-br from-amber-400 to-amber-600 rounded-full text-[9px] flex items-center justify-center text-black font-bold shadow-lg shadow-amber-500/30 ring-2 ring-zinc-900">
-                {currentSession.chatHistory.length}
-              </span>
-            )}
+            <MessageSquare
+              size={18}
+              className="sm:w-5 sm:h-5 text-zinc-300 group-hover:text-amber-400 transition-colors"
+            />
+            {currentSession &&
+              currentSession.chatHistory &&
+              currentSession.chatHistory.length > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-gradient-to-br from-amber-400 to-amber-600 rounded-full text-[9px] flex items-center justify-center text-black font-bold shadow-lg shadow-amber-500/30 ring-2 ring-zinc-900">
+                  {currentSession.chatHistory.length}
+                </span>
+              )}
           </button>
           {!isMobile && (
             <button
@@ -1314,7 +1509,10 @@ const MangaGeneratorV2 = () => {
               className="p-2 rounded-lg hover:bg-zinc-800/60 transition-all group"
               title="Settings"
             >
-              <Settings size={20} className="text-zinc-400 group-hover:text-amber-400 transition-colors" />
+              <Settings
+                size={20}
+                className="text-zinc-400 group-hover:text-amber-400 transition-colors"
+              />
             </button>
           )}
           <div className="h-6 sm:h-8 w-px bg-zinc-800/50" />
@@ -1326,7 +1524,11 @@ const MangaGeneratorV2 = () => {
             <Eye size={12} className="sm:w-3.5 sm:h-3.5 lg:w-4 lg:h-4" />
             <span className="hidden sm:inline">PREVIEW</span>
             <span className="sm:hidden font-bold">({exportCount})</span>
-            {exportCount > 0 && <span className="hidden sm:inline text-[10px] lg:text-xs ml-0.5">({exportCount})</span>}
+            {exportCount > 0 && (
+              <span className="hidden sm:inline text-[10px] lg:text-xs ml-0.5">
+                ({exportCount})
+              </span>
+            )}
           </button>
           <button
             onClick={() => router.push('/studio/preview?autoDownload=1')}
@@ -1351,7 +1553,10 @@ const MangaGeneratorV2 = () => {
             className="p-2 sm:p-2.5 rounded-lg hover:bg-zinc-800/60 active:bg-zinc-800 transition-all group touch-manipulation"
             title="Sign Out"
           >
-            <LogOut size={18} className="sm:w-5 sm:h-5 text-zinc-300 group-hover:text-red-400 transition-colors" />
+            <LogOut
+              size={18}
+              className="sm:w-5 sm:h-5 text-zinc-300 group-hover:text-red-400 transition-colors"
+            />
           </button>
         </div>
       </header>
@@ -1395,7 +1600,11 @@ const MangaGeneratorV2 = () => {
           <>
             <aside
               className="border-r border-zinc-800/50 bg-zinc-950/50 backdrop-blur-sm flex flex-col transition-all shadow-lg shadow-black/10"
-              style={{ width: `${middleWidth}px`, minWidth: '400px', maxWidth: '900px' }}
+              style={{
+                width: `${middleWidth}px`,
+                minWidth: '400px',
+                maxWidth: '900px',
+              }}
             >
               {/* Top Half - Story Settings & Options */}
               <div className="h-1/2 border-b border-zinc-800/50 bg-zinc-950/30 overflow-hidden">
@@ -1409,21 +1618,21 @@ const MangaGeneratorV2 = () => {
 
               {/* Bottom Half - Prompt Area */}
               <div className="h-1/2 bg-zinc-950/30 overflow-hidden">
-              <PromptPanel
-                prompt={prompt}
-                currentSession={currentSession}
-                loading={loading}
-                error={error}
-                batchLoading={batchLoading}
-                batchProgress={batchProgress}
-                generationProgress={generationProgress}
-                retryCount={retryCount}
-                config={config}
-                onPromptChange={setPrompt}
-                onGenerate={handleGenerate}
-                onBatchGenerate={handleBatchGenerate}
-                onCancelBatch={cancelBatchGenerate}
-              />
+                <PromptPanel
+                  prompt={prompt}
+                  currentSession={currentSession}
+                  loading={loading}
+                  error={error}
+                  batchLoading={batchLoading}
+                  batchProgress={batchProgress}
+                  generationProgress={generationProgress}
+                  retryCount={retryCount}
+                  config={config}
+                  onPromptChange={setPrompt}
+                  onGenerate={handleGenerate}
+                  onBatchGenerate={handleBatchGenerate}
+                  onCancelBatch={cancelBatchGenerate}
+                />
               </div>
             </aside>
 
@@ -1466,7 +1675,9 @@ const MangaGeneratorV2 = () => {
             />
             <div className="fixed left-0 top-16 bottom-0 w-[85vw] max-w-sm bg-zinc-900 border-r border-zinc-800 z-50 lg:hidden flex flex-col shadow-2xl animate-in slide-in-from-left duration-300">
               <div className="p-4 border-b border-zinc-800 flex items-center justify-between bg-zinc-900/95 backdrop-blur-sm">
-                <h2 className="text-lg font-bold text-zinc-200 uppercase tracking-wider">Sessions</h2>
+                <h2 className="text-lg font-bold text-zinc-200 uppercase tracking-wider">
+                  Sessions
+                </h2>
                 <button
                   onClick={() => setShowMobileSidebar(false)}
                   className="p-2 rounded-lg hover:bg-zinc-800 active:scale-95 transition-transform"
@@ -1515,15 +1726,14 @@ const MangaGeneratorV2 = () => {
               <div className="flex justify-center pt-3 pb-2">
                 <div className="w-12 h-1.5 bg-zinc-700 rounded-full" />
               </div>
-              
+
               {/* Tab Switcher */}
               <div className="flex border-b border-zinc-800 bg-zinc-900/50 px-4">
                 <button
                   onClick={() => setMobileTab('prompt')}
-                  className={`flex-1 px-4 py-4 text-sm font-bold transition-all relative ${mobileTab === 'prompt'
-                    ? 'text-amber-400'
-                    : 'text-zinc-400'
-                    }`}
+                  className={`flex-1 px-4 py-4 text-sm font-bold transition-all relative ${
+                    mobileTab === 'prompt' ? 'text-amber-400' : 'text-zinc-400'
+                  }`}
                 >
                   Generate
                   {mobileTab === 'prompt' && (
@@ -1532,10 +1742,11 @@ const MangaGeneratorV2 = () => {
                 </button>
                 <button
                   onClick={() => setMobileTab('settings')}
-                  className={`flex-1 px-4 py-4 text-sm font-bold transition-all relative ${mobileTab === 'settings'
-                    ? 'text-amber-400'
-                    : 'text-zinc-400'
-                    }`}
+                  className={`flex-1 px-4 py-4 text-sm font-bold transition-all relative ${
+                    mobileTab === 'settings'
+                      ? 'text-amber-400'
+                      : 'text-zinc-400'
+                  }`}
                 >
                   Settings
                   {mobileTab === 'settings' && (
@@ -1664,14 +1875,17 @@ const MangaGeneratorV2 = () => {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent className="bg-zinc-950/95 border border-zinc-800/60 backdrop-blur-md shadow-2xl">
           <AlertDialogHeader>
-              <AlertDialogTitle className="text-zinc-100 font-manga text-xl drop-shadow-[0_0_8px_rgba(251,191,36,0.2)]">
+            <AlertDialogTitle className="text-zinc-100 font-manga text-xl drop-shadow-[0_0_8px_rgba(251,191,36,0.2)]">
               {sessionToDelete
                 ? 'Delete Session?'
                 : pagesToDelete
                   ? 'Delete Pages?'
                   : 'Delete Page?'}
-              </AlertDialogTitle>
-            <AlertDialogDescription className="text-zinc-400" style={{ fontFamily: 'var(--font-inter)' }}>
+            </AlertDialogTitle>
+            <AlertDialogDescription
+              className="text-zinc-400"
+              style={{ fontFamily: 'var(--font-inter)' }}
+            >
               {sessionToDelete
                 ? 'This will permanently delete this session and all its pages. This action cannot be undone.'
                 : pagesToDelete
@@ -1688,13 +1902,13 @@ const MangaGeneratorV2 = () => {
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
-              if (sessionToDelete) {
+                if (sessionToDelete) {
                   deleteSession();
-              } else if (pagesToDelete && pagesToDelete.length > 0) {
+                } else if (pagesToDelete && pagesToDelete.length > 0) {
                   deleteSelectedPages();
-              } else if (pageToDelete) {
+                } else if (pageToDelete) {
                   deletePage();
-              }
+                }
               }}
               className="bg-gradient-to-b from-red-500 to-red-700 hover:from-red-600 hover:to-red-800 text-white shadow-[0_4px_0_0_rgb(153,27,27)] rounded-xl transition-all hover:scale-105"
               style={{ fontFamily: 'var(--font-inter)' }}
@@ -1714,7 +1928,9 @@ const MangaGeneratorV2 = () => {
             setShowFullscreen(false);
             setFullscreenImage(null);
           }}
-          onAddToProject={currentImage && !fullscreenImage ? addToProject : undefined}
+          onAddToProject={
+            currentImage && !fullscreenImage ? addToProject : undefined
+          }
         />
       )}
 
@@ -1729,11 +1945,26 @@ const MangaGeneratorV2 = () => {
                 setShowMobileSettings(false);
                 setMobileTab('sessions');
               }}
-              className={`flex flex-col items-center justify-center gap-1 flex-1 h-full rounded-xl transition-all relative ${showMobileSidebar ? 'bg-zinc-800/60 text-amber-400' : 'text-zinc-400 hover:bg-zinc-800/40 hover:text-zinc-300'
-                }`}
+              className={`flex flex-col items-center justify-center gap-1 flex-1 h-full rounded-xl transition-all relative ${
+                showMobileSidebar
+                  ? 'bg-zinc-800/60 text-amber-400'
+                  : 'text-zinc-400 hover:bg-zinc-800/40 hover:text-zinc-300'
+              }`}
             >
-              <Layers size={20} className={showMobileSidebar ? 'drop-shadow-[0_0_8px_rgba(251,191,36,0.4)]' : ''} />
-              <span className="text-[10px] font-medium" style={{ fontFamily: 'var(--font-inter)' }}>Sessions</span>
+              <Layers
+                size={20}
+                className={
+                  showMobileSidebar
+                    ? 'drop-shadow-[0_0_8px_rgba(251,191,36,0.4)]'
+                    : ''
+                }
+              />
+              <span
+                className="text-[10px] font-medium"
+                style={{ fontFamily: 'var(--font-inter)' }}
+              >
+                Sessions
+              </span>
             </button>
 
             {/* Prompt Tab */}
@@ -1743,11 +1974,26 @@ const MangaGeneratorV2 = () => {
                 setShowMobileSidebar(false);
                 setMobileTab('prompt');
               }}
-              className={`flex flex-col items-center justify-center gap-1 flex-1 h-full rounded-xl transition-all relative ${showMobileSettings && mobileTab === 'prompt' ? 'bg-zinc-800/60 text-amber-400' : 'text-zinc-400 hover:bg-zinc-800/40 hover:text-zinc-300'
-                }`}
+              className={`flex flex-col items-center justify-center gap-1 flex-1 h-full rounded-xl transition-all relative ${
+                showMobileSettings && mobileTab === 'prompt'
+                  ? 'bg-zinc-800/60 text-amber-400'
+                  : 'text-zinc-400 hover:bg-zinc-800/40 hover:text-zinc-300'
+              }`}
             >
-              <Sparkles size={20} className={showMobileSettings && mobileTab === 'prompt' ? 'drop-shadow-[0_0_8px_rgba(251,191,36,0.4)]' : ''} />
-              <span className="text-[10px] font-medium" style={{ fontFamily: 'var(--font-inter)' }}>Generate</span>
+              <Sparkles
+                size={20}
+                className={
+                  showMobileSettings && mobileTab === 'prompt'
+                    ? 'drop-shadow-[0_0_8px_rgba(251,191,36,0.4)]'
+                    : ''
+                }
+              />
+              <span
+                className="text-[10px] font-medium"
+                style={{ fontFamily: 'var(--font-inter)' }}
+              >
+                Generate
+              </span>
             </button>
 
             {/* Settings Tab */}
@@ -1757,11 +2003,26 @@ const MangaGeneratorV2 = () => {
                 setShowMobileSidebar(false);
                 setMobileTab('settings');
               }}
-              className={`flex flex-col items-center justify-center gap-1 flex-1 h-full rounded-xl transition-all relative ${showMobileSettings && mobileTab === 'settings' ? 'bg-zinc-800/60 text-amber-400' : 'text-zinc-400 hover:bg-zinc-800/40 hover:text-zinc-300'
-                }`}
+              className={`flex flex-col items-center justify-center gap-1 flex-1 h-full rounded-xl transition-all relative ${
+                showMobileSettings && mobileTab === 'settings'
+                  ? 'bg-zinc-800/60 text-amber-400'
+                  : 'text-zinc-400 hover:bg-zinc-800/40 hover:text-zinc-300'
+              }`}
             >
-              <Settings size={20} className={showMobileSettings && mobileTab === 'settings' ? 'drop-shadow-[0_0_8px_rgba(251,191,36,0.4)]' : ''} />
-              <span className="text-[10px] font-medium" style={{ fontFamily: 'var(--font-inter)' }}>Settings</span>
+              <Settings
+                size={20}
+                className={
+                  showMobileSettings && mobileTab === 'settings'
+                    ? 'drop-shadow-[0_0_8px_rgba(251,191,36,0.4)]'
+                    : ''
+                }
+              />
+              <span
+                className="text-[10px] font-medium"
+                style={{ fontFamily: 'var(--font-inter)' }}
+              >
+                Settings
+              </span>
             </button>
 
             {/* Preview Button */}
@@ -1770,7 +2031,12 @@ const MangaGeneratorV2 = () => {
               className="flex flex-col items-center justify-center gap-1 flex-1 h-full rounded-xl transition-all text-zinc-400 hover:bg-zinc-800/40 hover:text-zinc-300 relative"
             >
               <Eye size={20} />
-              <span className="text-[10px] font-medium" style={{ fontFamily: 'var(--font-inter)' }}>Preview</span>
+              <span
+                className="text-[10px] font-medium"
+                style={{ fontFamily: 'var(--font-inter)' }}
+              >
+                Preview
+              </span>
               {exportCount > 0 && (
                 <span className="absolute top-0 right-2 w-4 h-4 bg-gradient-to-br from-amber-400 to-amber-600 rounded-full text-[8px] flex items-center justify-center text-black font-bold shadow-lg shadow-amber-500/30 ring-2 ring-zinc-900">
                   {exportCount}
@@ -1783,15 +2049,18 @@ const MangaGeneratorV2 = () => {
               className="flex flex-col items-center justify-center gap-1 flex-1 h-full rounded-xl transition-all text-zinc-400 hover:bg-zinc-800/40 hover:text-zinc-300"
             >
               <Download size={20} />
-              <span className="text-[10px] font-medium" style={{ fontFamily: 'var(--font-inter)' }}>Download</span>
+              <span
+                className="text-[10px] font-medium"
+                style={{ fontFamily: 'var(--font-inter)' }}
+              >
+                Download
+              </span>
             </button>
           </div>
         </div>
       )}
-    </div >
+    </div>
   );
 };
 
 export default MangaGeneratorV2;
-
-

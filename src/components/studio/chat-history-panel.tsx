@@ -1,7 +1,7 @@
 'use client'
 
 import { X } from 'lucide-react';
-import { MangaSession } from '@/lib/types';
+import { MangaSession } from '@/types';
 
 interface ChatHistoryPanelProps {
     currentSession: MangaSession;

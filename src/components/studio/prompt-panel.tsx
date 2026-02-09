@@ -2,9 +2,9 @@
 
 import { useState } from 'react';
 import { Sparkles, Zap, X, Wand2 } from 'lucide-react';
-import { MangaSession, MangaConfig } from '@/lib/types';
+import { MangaSession, MangaConfig } from '@/types';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { cleanUserPrompt } from '@/lib/utils/prompt-utils';
+import { cleanUserPrompt } from '@/utils/prompt-utils';
 import { GenerationProgress } from '@/components/ui/generation-progress';
 
 interface PromptPanelProps {

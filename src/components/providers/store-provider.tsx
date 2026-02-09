@@ -1,27 +1,25 @@
 'use client';
 
-import { useEffect, ReactNode } from 'react';
-import { useAuthStore } from '@/lib/stores/auth.store';
-import { useUIStore } from '@/lib/stores/ui.store';
 import { LoadingPage } from '@/components/ui/loading';
-import { NotificationContainer } from '@/components/ui/notification';
 import { ModalContainer } from '@/components/ui/modal';
-import { useRouter, usePathname } from 'next/navigation';
+import { NotificationContainer } from '@/components/ui/notification';
+import { useUser } from '@/hooks/use-auth';
+import { useAuthStore } from '@/stores/auth.store';
+import { useUIStore } from '@/stores/ui.store';
+import { useIsMutating } from '@tanstack/react-query';
+import { usePathname, useRouter } from 'next/navigation';
+import { ReactNode, useEffect } from 'react';
 
 interface StoreProviderProps {
   children: ReactNode;
 }
 
 export function StoreProvider({ children }: StoreProviderProps) {
-  const { isAuthenticated, isInitializing, checkAuth } = useAuthStore();
+  const { isLoading: isUserLoading, data: user } = useUser();
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated); // OR !!user
   const { setIsMobile, setTheme, theme } = useUIStore();
   const router = useRouter();
   const pathname = usePathname();
-
-  // Initialize auth on app start
-  useEffect(() => {
-    checkAuth();
-  }, [checkAuth]);
 
   // Handle mobile detection
   useEffect(() => {
@@ -37,15 +35,17 @@ export function StoreProvider({ children }: StoreProviderProps) {
   // Handle theme changes
   useEffect(() => {
     if (theme === 'system') {
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const prefersDark = window.matchMedia(
+        '(prefers-color-scheme: dark)',
+      ).matches;
       document.documentElement.classList.toggle('dark', prefersDark);
-      
+
       // Listen for system theme changes
       const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
       const handleChange = (e: MediaQueryListEvent) => {
         document.documentElement.classList.toggle('dark', e.matches);
       };
-      
+
       mediaQuery.addEventListener('change', handleChange);
       return () => mediaQuery.removeEventListener('change', handleChange);
     } else {
@@ -55,20 +55,30 @@ export function StoreProvider({ children }: StoreProviderProps) {
 
   // Handle route protection
   useEffect(() => {
-    if (!isInitializing && !isAuthenticated) {
-      const publicRoutes = ['/auth/login', '/auth/register', '/landing-v2', '/'];
-      const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route));
-      
+    // Only redirect if we are sure we are not loading user
+    if (!isUserLoading && !isAuthenticated && !user) {
+      const publicRoutes = [
+        '/auth/login',
+        '/auth/register',
+        '/landing-v2',
+        '/',
+      ];
+      const isPublicRoute = publicRoutes.some(
+        (route) => pathname === route || pathname.startsWith(route + '/'),
+      );
+
       if (!isPublicRoute) {
+        // Double check token existence to avoid premature redirect?
+        // useUser handles token check internally via fetchWrapper
         router.push('/auth/login');
       }
     }
-  }, [isAuthenticated, isInitializing, pathname, router]);
+  }, [isAuthenticated, isUserLoading, user, pathname, router]);
 
   // Show loading during initialization
-  if (isInitializing) {
+  if (isUserLoading) {
     return (
-      <LoadingPage 
+      <LoadingPage
         title="Initializing Application"
         message="Setting up your workspace..."
       />
@@ -86,15 +96,15 @@ export function StoreProvider({ children }: StoreProviderProps) {
 
 // Hook to use store loading states in components
 export function useStoreLoading() {
-  const authLoading = useAuthStore(state => 
-    state.loginLoading || state.registerLoading || state.profileLoading
-  );
-  
-  const uiLoading = useUIStore(state => state.globalLoading);
-  
+  // Use React Query's isMutating to detect global mutation loading if needed
+  const isMutating = useIsMutating();
+  const authLoading = isMutating > 0;
+
+  const uiLoading = useUIStore((state) => state.globalLoading);
+
   return {
     authLoading,
     uiLoading,
-    isAnyLoading: authLoading || uiLoading
+    isAnyLoading: authLoading || uiLoading,
   };
 }

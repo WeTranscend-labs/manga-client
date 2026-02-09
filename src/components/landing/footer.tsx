@@ -1,5 +1,3 @@
-import React from "react";
-
 export function Footer() {
   const year = new Date().getFullYear();
 
@@ -7,22 +5,20 @@ export function Footer() {
     <footer className=" border-t border-zinc-800/70 bg-zinc-950/80">
       <div className="mx-auto flex  flex-col gap-4  py-8 text-xs text-zinc-400 sm:flex-row sm:items-center sm:justify-between">
         <div className="space-y-1">
-          <p className="font-manga text-sm text-zinc-100">
-            Manga Studio
-          </p>
+          <p className="font-manga text-sm text-zinc-100">Manga Studio</p>
           <p className="max-w-md leading-relaxed">
-            AI-powered studio for creating manga pages, keeping characters consistent,
-            and exporting print-ready chapters.
+            AI-powered studio for creating manga pages, keeping characters
+            consistent, and exporting print-ready chapters.
           </p>
           <p className="text-[11px] text-zinc-500">
             © {year} Manga Studio. Made by{' '}
             <a
-              href="https://x.com/younngclement"
+              href="https://x.com/Tod"
               target="_blank"
               rel="noopener noreferrer"
               className="text-amber-400 hover:text-amber-300 transition-colors underline underline-offset-2"
             >
-              ClementHoang
+              WeTranscend
             </a>
           </p>
         </div>
@@ -51,5 +47,3 @@ export function Footer() {
     </footer>
   );
 }
-
-

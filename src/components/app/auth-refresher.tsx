@@ -2,8 +2,8 @@
 
 import { useEffect } from 'react';
 
-import { authStore } from '@/lib/services/auth-client';
-import { refreshAccessToken } from '@/lib/services/api-client';
+import { authStore } from '@/services/auth-client';
+import { refreshAccessToken } from '@/services/api-client';
 
 const REFRESH_INTERVAL_MS = 14.5 * 60 * 1000; // ~14.5 minutes (near 15m access token TTL)
 

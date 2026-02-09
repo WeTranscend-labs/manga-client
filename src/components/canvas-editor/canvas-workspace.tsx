@@ -1,9 +1,9 @@
 'use client'
 
 import { useState, useRef, useCallback, useEffect, MouseEvent as ReactMouseEvent } from 'react'
-import { cn } from '@/lib/utils'
-import { useCanvasStore, createPanelElement, createImageElement, createTextElement, createDialogueElement } from '@/lib/stores/canvas-store'
-import { CanvasElement, DialogueElement, Position } from '@/lib/types/canvas'
+import { cn } from '@/utils/utils'
+import { useCanvasStore, createPanelElement, createImageElement, createTextElement, createDialogueElement } from '@/stores/canvas-store'
+import { CanvasElement, DialogueElement, Position } from '@/types/canvas'
 
 interface CanvasWorkspaceProps {
   onGenerateImage?: (panelId: string) => void

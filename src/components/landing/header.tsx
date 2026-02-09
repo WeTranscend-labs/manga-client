@@ -1,11 +1,7 @@
-"use client";
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import { Button } from '@/components/ui/button';
+'use client';
 import { AnimatedShinyButton } from '@/components/ui/animated-shiny-button';
-import { useAuthStore, authStore } from '@/lib/services/auth-client';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,40 +9,24 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { getMyProfile } from '@/lib/services/user-service';
-import type { UserProfile } from '@/lib/types';
-import { User, LogOut } from 'lucide-react';
+import { useLogout, useUser } from '@/hooks/use-auth';
+import { useAuthStore } from '@/stores/auth.store';
+import { LogOut, User } from 'lucide-react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export function Header() {
   const router = useRouter();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  const loadFromStorage = useAuthStore((state) => state.loadFromStorage);
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-
-  useEffect(() => {
-    loadFromStorage();
-  }, [loadFromStorage]);
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      getMyProfile().then(setProfile).catch(() => setProfile(null));
-    } else {
-      setProfile(null);
-    }
-  }, [isAuthenticated]);
+  const { data: profile } = useUser();
+  const { mutate: logout } = useLogout();
 
   const handleSignOut = () => {
-    // Clear tokens from localStorage and state
-    authStore.clear();
-    authStore.setError(null); // Clear any error messages
-    setProfile(null);
-    // Redirect to home page
-    router.push('/');
-    router.refresh(); // Refresh to update UI state
+    logout();
   };
 
   const getInitials = (username: string) => {
-    return username.substring(0, 2).toUpperCase();
+    return username?.substring(0, 2).toUpperCase() || 'U';
   };
 
   return (
@@ -64,16 +44,28 @@ export function Header() {
         </Link>
 
         <nav className="hidden md:flex items-center gap-8">
-          <Link href="#features" className="text-muted-foreground text-sm hover:text-foreground transition-colors">
+          <Link
+            href="#features"
+            className="text-muted-foreground text-sm hover:text-foreground transition-colors"
+          >
             Features
           </Link>
-          <Link href="#gallery" className="text-muted-foreground text-sm hover:text-foreground transition-colors">
+          <Link
+            href="#gallery"
+            className="text-muted-foreground text-sm hover:text-foreground transition-colors"
+          >
             Gallery
           </Link>
-          <Link href="#pricing" className="text-muted-foreground text-sm hover:text-foreground transition-colors">
+          <Link
+            href="#pricing"
+            className="text-muted-foreground text-sm hover:text-foreground transition-colors"
+          >
             Pricing
           </Link>
-          <Link href="/community" className="text-muted-foreground text-sm hover:text-foreground transition-colors">
+          <Link
+            href="/community"
+            className="text-muted-foreground text-sm hover:text-foreground transition-colors"
+          >
             Community
           </Link>
         </nav>
@@ -82,7 +74,12 @@ export function Header() {
       <div className="flex items-center gap-3">
         {isAuthenticated ? (
           <>
-            <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
+            <Button
+              asChild
+              variant="ghost"
+              size="sm"
+              className="hidden sm:inline-flex"
+            >
               <Link href="/studio">Studio</Link>
             </Button>
             <AnimatedShinyButton
@@ -95,20 +92,30 @@ export function Header() {
               <DropdownMenuTrigger asChild>
                 <button className="outline-none focus:outline-none">
                   <Avatar className="h-9 w-9 cursor-pointer border-2 border-zinc-700 hover:border-amber-400 transition-colors">
-                    <AvatarImage src={profile?.avatarUrl} alt={profile?.displayName || profile?.username} />
+                    <AvatarImage
+                      src={profile?.avatar}
+                      alt={profile?.displayName || profile?.username}
+                    />
                     <AvatarFallback className="bg-zinc-800 text-amber-400 text-sm font-semibold">
-                      {profile ? getInitials(profile.displayName || profile.username) : 'U'}
+                      {profile
+                        ? getInitials(profile.displayName || profile.username)
+                        : 'U'}
                     </AvatarFallback>
                   </Avatar>
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 bg-zinc-900 border-zinc-800">
+              <DropdownMenuContent
+                align="end"
+                className="w-56 bg-zinc-900 border-zinc-800"
+              >
                 <div className="px-2 py-1.5">
                   <p className="text-sm font-medium text-white">
                     {profile?.displayName || profile?.username || 'User'}
                   </p>
                   {profile?.username && profile?.displayName && (
-                    <p className="text-xs text-zinc-400 truncate">@{profile.username}</p>
+                    <p className="text-xs text-zinc-400 truncate">
+                      @{profile.username}
+                    </p>
                   )}
                 </div>
                 <DropdownMenuSeparator className="bg-zinc-800" />
@@ -132,7 +139,12 @@ export function Header() {
           </>
         ) : (
           <>
-            <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
+            <Button
+              asChild
+              variant="ghost"
+              size="sm"
+              className="hidden sm:inline-flex"
+            >
               <Link href="/auth/login">Sign In</Link>
             </Button>
             <AnimatedShinyButton
@@ -149,7 +161,9 @@ export function Header() {
               </Avatar>
             </Link>
             <AnimatedShinyButton url="/auth/register" className="text-sm">
-              <span style={{ fontFamily: 'var(--font-inter)' }}>Get Started</span>
+              <span style={{ fontFamily: 'var(--font-inter)' }}>
+                Get Started
+              </span>
             </AnimatedShinyButton>
           </>
         )}

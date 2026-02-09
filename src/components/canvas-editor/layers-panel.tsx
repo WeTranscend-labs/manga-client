@@ -19,9 +19,9 @@ import {
   MessageCircle,
   Square,
 } from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { useCanvasStore } from '@/lib/stores/canvas-store'
-import { CanvasElement } from '@/lib/types/canvas'
+import { cn } from '@/utils/utils'
+import { useCanvasStore } from '@/stores/canvas-store'
+import { CanvasElement } from '@/types/canvas'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Button } from '@/components/ui/button'
 

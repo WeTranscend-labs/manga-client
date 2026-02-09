@@ -1,7 +1,7 @@
 'use client';
 
-import { checkPasswordStrength, getPasswordStrengthColor, getPasswordStrengthText, type PasswordStrength } from '@/lib/validations/auth';
-import { cn } from '@/lib/utils';
+import { checkPasswordStrength, getPasswordStrengthColor, getPasswordStrengthText, type PasswordStrength } from '@/validations/auth';
+import { cn } from '@/utils/utils';
 
 interface PasswordStrengthIndicatorProps {
     password: string;
