@@ -66,9 +66,6 @@ export enum ApiEndpoints {
   GROK_HISTORY = '/api/grok/history',
 }
 
-export const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-export const GROK_API_KEY = process.env.GROK_API_KEY;
-
 export const BACKEND_BASE_URL =
   process.env.NEXT_PUBLIC_BACKEND_URL ||
   'https://backend-manga-generator.onrender.com';
