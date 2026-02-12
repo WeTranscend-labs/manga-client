@@ -2,8 +2,8 @@
 
 import { useEffect } from 'react';
 import { X, CheckCircle, AlertCircle, AlertTriangle, Info } from 'lucide-react';
-import { useUIStore } from '@/lib/stores/ui.store';
-import { cn } from '@/lib/utils';
+import { useUIStore } from '@/stores/ui.store';
+import { cn } from '@/utils/utils';
 import { Button } from '@/components/ui/button';
 
 const NotificationIcon = ({ type }: { type: string }) => {
