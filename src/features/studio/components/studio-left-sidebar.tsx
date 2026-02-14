@@ -4,28 +4,34 @@ import { useProjectsStore } from '@/stores/projects.store';
 import { useStudioUIStore } from '@/stores/studio-ui.store';
 import { useUIStore } from '@/stores/ui.store';
 import { useEffect, useMemo, useState } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import SessionSidebar from './session-sidebar';
 
 export const StudioLeftSidebar = () => {
   // Global State
-  const {
-    currentProject,
-    currentSession,
-    createSession,
-    switchSession,
-    updateSessionContext,
-    updateSessionConfig,
-    deleteSession,
-    deletePage,
-    deletePages,
-    movePage,
-    toggleMarkForExport,
-    toggleReferencePage,
-  } = useProjectsStore();
+  const currentProject = useProjectsStore((state) => state.currentProject);
+  const currentSession = useProjectsStore((state) => state.currentSession);
+  const createSession = useProjectsStore((state) => state.createSession);
+  const switchSession = useProjectsStore((state) => state.switchSession);
+  const updateSessionConfig = useProjectsStore(
+    (state) => state.updateSessionConfig,
+  );
+  const movePage = useProjectsStore((state) => state.movePage);
+  const toggleMarkForExport = useProjectsStore(
+    (state) => state.toggleMarkForExport,
+  );
+  const toggleReferencePage = useProjectsStore(
+    (state) => state.toggleReferencePage,
+  );
 
-  const { isMobile } = useUIStore();
-  const { leftWidth, setStudioState, setDeleteConfirmation } =
-    useStudioUIStore();
+  const isMobile = useUIStore((state) => state.isMobile);
+  const { leftWidth, setStudioState, setDeleteConfirmation } = useStudioUIStore(
+    useShallow((state) => ({
+      leftWidth: state.leftWidth,
+      setStudioState: state.setStudioState,
+      setDeleteConfirmation: state.setDeleteConfirmation,
+    })),
+  );
 
   const [isDragging, setIsDragging] = useState(false);
 

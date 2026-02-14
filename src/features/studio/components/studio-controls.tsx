@@ -7,23 +7,34 @@ import { useStudioUIStore } from '@/stores/studio-ui.store';
 import { useUIStore } from '@/stores/ui.store';
 import { MangaConfig } from '@/types';
 import { useEffect, useState } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import PromptPanel from './prompt-panel';
 
 export const StudioControls = () => {
   // Global State
-  const {
-    currentProject: project,
-    currentSession,
-    setCurrentSession,
-    setLoading,
-    setError,
-    updateSessionContext,
-    updateSessionConfig,
-  } = useProjectsStore();
+  const project = useProjectsStore((state) => state.currentProject);
+  const currentSession = useProjectsStore((state) => state.currentSession);
+  const setCurrentSession = useProjectsStore(
+    (state) => state.setCurrentSession,
+  );
+  const setLoading = useProjectsStore((state) => state.setLoading);
+  const setError = useProjectsStore((state) => state.setError);
+  const updateSessionContext = useProjectsStore(
+    (state) => state.updateSessionContext,
+  );
+  const updateSessionConfig = useProjectsStore(
+    (state) => state.updateSessionConfig,
+  );
 
-  const { middleWidth, prompt, setStudioState } = useStudioUIStore();
+  const { middleWidth, prompt, setStudioState } = useStudioUIStore(
+    useShallow((state) => ({
+      middleWidth: state.middleWidth,
+      prompt: state.prompt,
+      setStudioState: state.setStudioState,
+    })),
+  );
 
-  const { isMobile } = useUIStore();
+  const isMobile = useUIStore((state) => state.isMobile);
 
   // Local State for current image (managed by generation hook, but we need to pass setter)
   // Actually MangaStudio had `currentImage` state.

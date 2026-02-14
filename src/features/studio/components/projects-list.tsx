@@ -14,7 +14,9 @@ import Image from 'next/image';
 import { useEffect } from 'react';
 
 export function ProjectsList() {
-  const { pagination, filters, setFilters } = useProjectsStore();
+  const pagination = useProjectsStore((state) => state.pagination);
+  const filters = useProjectsStore((state) => state.filters);
+  const setFilters = useProjectsStore((state) => state.setFilters);
 
   const {
     data: projects = [],
@@ -30,7 +32,7 @@ export function ProjectsList() {
 
   const { mutate: deleteProject } = useDeleteProject();
 
-  const { setLoading } = useUIStore();
+  const setLoading = useUIStore((state) => state.setLoading);
   // useModal accepts components, and returns a presenter function that accepts props
   // The props passthrough logic in ModalContainer now spreads the data argument.
   // So data passed to presentConfirm must match ConfirmDialogProps (minus isOpen/onDismiss).

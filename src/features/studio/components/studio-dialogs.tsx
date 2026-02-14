@@ -15,24 +15,31 @@ import { useStudioUIStore } from '@/stores/studio-ui.store';
 import { GeneratedManga } from '@/types';
 import { generateId } from '@/utils/react-utils';
 import { toast } from 'sonner';
+import { useShallow } from 'zustand/react/shallow';
 
 export const StudioDialogs = () => {
-  const {
-    deleteSession,
-    deletePage,
-    deletePages,
-    currentProject,
-    currentSession,
-    addPage,
-  } = useProjectsStore();
+  const deleteSession = useProjectsStore((state) => state.deleteSession);
+  const deletePage = useProjectsStore((state) => state.deletePage);
+  const deletePages = useProjectsStore((state) => state.deletePages);
+  const currentProject = useProjectsStore((state) => state.currentProject);
+  const currentSession = useProjectsStore((state) => state.currentSession);
+  const addPage = useProjectsStore((state) => state.addPage);
 
   const {
     deleteConfirmation,
     setDeleteConfirmation,
     fullscreenPreview,
     setStudioState,
-    prompt, // Need prompt for addToProject if from canvas? or just use prompt from store
-  } = useStudioUIStore();
+    prompt,
+  } = useStudioUIStore(
+    useShallow((state) => ({
+      deleteConfirmation: state.deleteConfirmation,
+      setDeleteConfirmation: state.setDeleteConfirmation,
+      fullscreenPreview: state.fullscreenPreview,
+      setStudioState: state.setStudioState,
+      prompt: state.prompt,
+    })),
+  );
 
   const handleConfirmDelete = async () => {
     const { type, id, ids } = deleteConfirmation;
@@ -143,7 +150,7 @@ export const StudioDialogs = () => {
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleConfirmDelete}
-              className="bg-gradient-to-b from-red-500 to-red-700 hover:from-red-600 hover:to-red-800 text-white shadow-[0_4px_0_0_rgb(153,27,27)] rounded-xl transition-all hover:scale-105"
+              className="bg-linear-to-b from-red-500 to-red-700 hover:from-red-600 hover:to-red-800 text-white shadow-[0_4px_0_0_rgb(153,27,27)] rounded-xl transition-all hover:scale-105"
               style={{ fontFamily: 'var(--font-inter)' }}
             >
               Delete

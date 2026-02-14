@@ -4,17 +4,28 @@ import { useProjectsStore } from '@/stores/projects.store';
 import { useStudioUIStore } from '@/stores/studio-ui.store';
 import { Eye, Layers, Settings, Sparkles } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useShallow } from 'zustand/react/shallow';
 
 export const StudioMobileNav = () => {
   const router = useRouter();
-  const { currentSession, currentProject: project } = useProjectsStore();
+  const currentSession = useProjectsStore((state) => state.currentSession);
+  const project = useProjectsStore((state) => state.currentProject);
+
   const {
     showMobileSidebar,
     showMobileSettings,
-    activeMobileTab, // Need to make sure this is in store
+    activeMobileTab,
     setStudioState,
     toggleMobileSidebar,
-  } = useStudioUIStore();
+  } = useStudioUIStore(
+    useShallow((state) => ({
+      showMobileSidebar: state.showMobileSidebar,
+      showMobileSettings: state.showMobileSettings,
+      activeMobileTab: state.activeMobileTab,
+      setStudioState: state.setStudioState,
+      toggleMobileSidebar: state.toggleMobileSidebar,
+    })),
+  );
 
   const exportCount = currentSession
     ? currentSession.pages.filter((p) => p.markedForExport).length

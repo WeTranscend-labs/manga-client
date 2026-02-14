@@ -26,6 +26,7 @@ import { useUIStore } from '@/stores/ui.store';
 import { generateId } from '@/utils/react-utils';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { useShallow } from 'zustand/react/shallow';
 
 export const DEFAULT_CONFIG: MangaConfig = {
   style: MangaStyle.SHONEN,
@@ -41,16 +42,18 @@ export const DEFAULT_CONFIG: MangaConfig = {
 
 export const MangaStudio = () => {
   // Global State
-  const {
-    currentProject: project,
-    currentSession,
-    setCurrentSession,
-    addPage,
-    updateCurrentProject,
-  } = useProjectsStore();
+  const project = useProjectsStore((state) => state.currentProject);
+  const currentSession = useProjectsStore((state) => state.currentSession);
+  const addPage = useProjectsStore((state) => state.addPage);
 
-  const { isMobile } = useUIStore();
-  const { prompt, showChat, setStudioState } = useStudioUIStore();
+  const isMobile = useUIStore((state) => state.isMobile);
+  const { prompt, showChat, setStudioState } = useStudioUIStore(
+    useShallow((state) => ({
+      prompt: state.prompt,
+      showChat: state.showChat,
+      setStudioState: state.setStudioState,
+    })),
+  );
 
   // Local state for retry count and loading which hooks might use
   // Ideally these go to stores too, but for generation hook we pass setters
@@ -58,11 +61,13 @@ export const MangaStudio = () => {
 
   // CurrentImage is used for CanvasArea.
   const { currentImage, generationProgress, generationLoading } =
-    useStudioUIStore((state) => ({
-      currentImage: state.currentImage,
-      generationProgress: state.generationProgress,
-      generationLoading: state.generationLoading,
-    }));
+    useStudioUIStore(
+      useShallow((state) => ({
+        currentImage: state.currentImage,
+        generationProgress: state.generationProgress,
+        generationLoading: state.generationLoading,
+      })),
+    );
 
   // We also need `addToProject` logic for CanvasArea.
   const addToProject = async () => {

@@ -2,25 +2,33 @@ import { useProjectsStore } from '@/stores/projects.store';
 import { useStudioUIStore } from '@/stores/studio-ui.store';
 import { X } from 'lucide-react';
 import { useMemo } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import SessionSidebar from './session-sidebar';
 
 export const StudioMobileSidebar = () => {
-  const {
-    currentProject,
-    currentSession,
-    switchSession,
-    createSession,
-    toggleMarkForExport,
-    toggleReferencePage,
-    movePage,
-    deleteSession,
-    deletePage,
-    deletePages,
-    updateSessionConfig,
-  } = useProjectsStore();
+  const currentProject = useProjectsStore((state) => state.currentProject);
+  const currentSession = useProjectsStore((state) => state.currentSession);
+  const switchSession = useProjectsStore((state) => state.switchSession);
+  const createSession = useProjectsStore((state) => state.createSession);
+  const toggleMarkForExport = useProjectsStore(
+    (state) => state.toggleMarkForExport,
+  );
+  const toggleReferencePage = useProjectsStore(
+    (state) => state.toggleReferencePage,
+  );
+  const movePage = useProjectsStore((state) => state.movePage);
+  const updateSessionConfig = useProjectsStore(
+    (state) => state.updateSessionConfig,
+  );
 
   const { showMobileSidebar, setStudioState, setDeleteConfirmation } =
-    useStudioUIStore();
+    useStudioUIStore(
+      useShallow((state) => ({
+        showMobileSidebar: state.showMobileSidebar,
+        setStudioState: state.setStudioState,
+        setDeleteConfirmation: state.setDeleteConfirmation,
+      })),
+    );
 
   const pagesToShow = useMemo(
     () => (currentSession ? currentSession.pages : currentProject?.pages || []),

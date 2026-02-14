@@ -34,16 +34,13 @@ export const authKeys = {
 };
 
 export function useUser() {
-  const setUser = useAuthStore((state) => state.setUser);
   const accessToken = useAuthStore((state) => state.accessToken);
 
   return useQuery({
     queryKey: authKeys.user,
     enabled: !!accessToken,
     queryFn: async () => {
-      const user = await authService.getProfile();
-      setUser(user);
-      return user;
+      return authService.getProfile();
     },
     retry: false, // Don't retry if profile fetch fails (meaning not logged in)
     staleTime: Infinity, // User data doesn't change often

@@ -1,65 +1,38 @@
-import { useModal } from '@/components/ui/modal';
+import { Icons } from '@/components/icons';
 import { Route } from '@/constants';
-import { WalletDetailsModal } from '@/features/auth/components/modals/wallet-details-modal';
 import { authStore } from '@/stores/auth.store';
 import { useProjectsStore } from '@/stores/projects.store';
 import { useStudioUIStore } from '@/stores/studio-ui.store';
 import { useUIStore } from '@/stores/ui.store';
-import { usePrivy as useWallet } from '@privy-io/react-auth';
-import {
-  Download,
-  Eye,
-  Layers,
-  LogOut,
-  MessageSquare,
-  Network,
-  Settings,
-  Wallet as WalletIcon,
-} from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { useShallow } from 'zustand/react/shallow';
 
 export const StudioHeader = () => {
   const router = useRouter();
 
   // Stores
-  const { currentSession, currentProject } = useProjectsStore();
-  const { isMobile } = useUIStore();
+  const currentProject = useProjectsStore((state) => state.currentProject);
+  const currentSession = useProjectsStore((state) => state.currentSession);
+  const isMobile = useUIStore((state) => state.isMobile);
+
   const {
-    showMobileSidebar,
     showMobileSettings,
-    showChat,
-    showSettings,
     toggleMobileSidebar,
     toggleChat,
     toggleSettings,
     setStudioState,
-  } = useStudioUIStore();
-
-  const {
-    login: connectWallet,
-    logout: disconnectWallet,
-    authenticated,
-    user: walletUser,
-    ready,
-  } = useWallet();
-
-  const [presentWalletDetails] = useModal(WalletDetailsModal);
-
-  const walletAddress = walletUser?.wallet?.address;
-  const shortAddress = walletAddress
-    ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`
-    : '';
-
-  const handleOpenWalletModal = () => {
-    if (!walletAddress) return;
-    presentWalletDetails({
-      address: walletAddress,
-      onDisconnect: disconnectWallet,
-    });
-  };
+  } = useStudioUIStore(
+    useShallow((state) => ({
+      showMobileSettings: state.showMobileSettings,
+      toggleMobileSidebar: state.toggleMobileSidebar,
+      toggleChat: state.toggleChat,
+      toggleSettings: state.toggleSettings,
+      setStudioState: state.setStudioState,
+    })),
+  );
 
   const exportCount = currentSession
     ? currentSession.pages.filter((p) => p.markedForExport).length
@@ -94,7 +67,7 @@ export const StudioHeader = () => {
         </Link>
         {currentSession && (
           <div className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 bg-zinc-900/60 rounded-lg border border-zinc-800/60 backdrop-blur-sm shadow-sm ring-1 ring-zinc-700/20 shrink-0 min-w-0">
-            <Layers
+            <Icons.Layers
               size={12}
               className="sm:w-3.5 sm:h-3.5 text-amber-400 shrink-0"
             />
@@ -122,7 +95,7 @@ export const StudioHeader = () => {
               className="p-2.5 rounded-lg hover:bg-zinc-800/60 active:bg-zinc-800 transition-all active:scale-95 touch-manipulation"
               title="Sessions"
             >
-              <Layers size={20} className="text-zinc-300" />
+              <Icons.Layers size={20} className="text-zinc-300" />
             </button>
             <button
               onClick={() => {
@@ -134,7 +107,7 @@ export const StudioHeader = () => {
               className="p-2.5 rounded-lg hover:bg-zinc-800/60 active:bg-zinc-800 transition-all active:scale-95 touch-manipulation"
               title="Generate"
             >
-              <Settings size={20} className="text-zinc-300" />
+              <Icons.Settings size={20} className="text-zinc-300" />
             </button>
           </>
         )}
@@ -143,7 +116,7 @@ export const StudioHeader = () => {
           className="p-2 sm:p-2.5 rounded-lg hover:bg-zinc-800/60 active:bg-zinc-800 transition-all relative group touch-manipulation"
           title="Chat History"
         >
-          <MessageSquare
+          <Icons.MessageSquare
             size={18}
             className="sm:w-5 sm:h-5 text-zinc-300 group-hover:text-amber-400 transition-colors"
           />
@@ -161,61 +134,19 @@ export const StudioHeader = () => {
             className="p-2 rounded-lg hover:bg-zinc-800/60 transition-all group"
             title="Settings"
           >
-            <Settings
+            <Icons.Settings
               size={20}
               className="text-zinc-400 group-hover:text-amber-400 transition-colors"
             />
           </button>
         )}
         <div className="h-6 sm:h-8 w-px bg-zinc-800/50 mx-1 sm:mx-2" />
-
-        {/* Web3 Wallet Integration */}
-        <div className="flex items-center">
-          {ready && authenticated ? (
-            <div className="flex items-center gap-2 group">
-              <div className="hidden lg:flex flex-col items-end">
-                <span className="text-[10px] font-bold text-amber-500 flex items-center gap-1 leading-none mb-1">
-                  <Network size={10} />
-                  POLKADOT HUB TESTNET
-                </span>
-                <span className="text-xs font-medium text-zinc-300 group-hover:text-zinc-100 transition-colors">
-                  {shortAddress}
-                </span>
-              </div>
-              <button
-                onClick={handleOpenWalletModal}
-                className="flex items-center gap-2 px-3 py-1.5 bg-zinc-900 border border-zinc-700/50 hover:border-amber-500/50 rounded-lg transition-all shadow-sm ring-1 ring-zinc-700/20"
-                title="Wallet Details"
-              >
-                <div className="w-6 h-6 rounded-full bg-linear-to-br from-amber-400 to-amber-600 flex items-center justify-center text-black font-bold text-[10px]">
-                  {shortAddress.slice(0, 2).toUpperCase()}
-                </div>
-                <WalletIcon
-                  size={14}
-                  className="text-zinc-400 group-hover:text-amber-400 transition-colors"
-                />
-              </button>
-            </div>
-          ) : (
-            <button
-              onClick={() => connectWallet()}
-              disabled={!ready}
-              className="px-3 sm:px-4 py-1.5 sm:py-2 bg-zinc-900 border border-amber-500/30 hover:border-amber-500 text-amber-400 hover:text-white rounded-lg text-xs font-bold flex items-center gap-2 transition-all shadow-lg active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed group"
-            >
-              <WalletIcon size={14} className="group-hover:animate-bounce" />
-              <span className="hidden sm:inline">CONNECT WALLET</span>
-              <span className="sm:hidden">WALLET</span>
-            </button>
-          )}
-        </div>
-
-        <div className="h-6 sm:h-8 w-px bg-zinc-800/50" />
         <button
           onClick={() => router.push(Route.STUDIO_PREVIEW)}
           className="px-2.5 sm:px-4 lg:px-5 py-1.5 sm:py-2 bg-linear-to-b from-amber-400 to-amber-600 hover:from-amber-500 hover:to-amber-700 text-black rounded-lg font-bold text-[10px] sm:text-xs lg:text-sm flex items-center gap-1 sm:gap-1.5 lg:gap-2 transition-all shadow-[0_3px_0_0_rgb(180,83,9)] hover:shadow-[0_3px_0_0_rgb(180,83,9)] active:shadow-[0_1px_0_0_rgb(180,83,9)] active:translate-y-0.5 hover:scale-105 touch-manipulation"
           style={{ fontFamily: 'var(--font-inter)' }}
         >
-          <Eye size={12} className="sm:w-3.5 sm:h-3.5 lg:w-4 lg:h-4" />
+          <Icons.Eye size={12} className="sm:w-3.5 sm:h-3.5 lg:w-4 lg:h-4" />
           <span className="hidden sm:inline">PREVIEW</span>
           <span className="sm:hidden font-bold">({exportCount})</span>
           {exportCount > 0 && (
@@ -229,7 +160,7 @@ export const StudioHeader = () => {
           className="hidden sm:flex px-3 lg:px-4 py-1.5 bg-zinc-900 border border-zinc-700 text-zinc-100 rounded-lg text-xs lg:text-sm font-semibold items-center gap-1.5 hover:bg-zinc-800 hover:border-zinc-500 transition-all"
           style={{ fontFamily: 'var(--font-inter)' }}
         >
-          <Download size={14} className="lg:w-4 lg:h-4" />
+          <Icons.Download size={14} className="lg:w-4 lg:h-4" />
           <span>Download PDF</span>
         </button>
         <button
@@ -237,7 +168,7 @@ export const StudioHeader = () => {
           className="p-2 sm:p-2.5 rounded-lg hover:bg-zinc-800/60 active:bg-zinc-800 transition-all group touch-manipulation"
           title="Sign Out"
         >
-          <LogOut
+          <Icons.LogOut
             size={18}
             className="sm:w-5 sm:h-5 text-zinc-300 group-hover:text-red-400 transition-colors"
           />

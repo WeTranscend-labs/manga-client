@@ -1,26 +1,40 @@
 'use client';
 
 import StorySettingsPanel from '@/components/story-settings-panel';
+import { DEFAULT_MANGA_CONFIG } from '@/constants/manga-defaults';
 import { useStudioGeneration } from '@/features/studio/hooks/useStudioGeneration';
 import { useProjectsStore } from '@/stores/projects.store';
 import { useStudioUIStore } from '@/stores/studio-ui.store';
+import { MangaConfig } from '@/types';
 import { X } from 'lucide-react';
 import { useState } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import PromptPanel from './prompt-panel';
 
 export const StudioMobileSheet = () => {
-  const {
-    currentProject,
-    currentSession,
-    setCurrentSession,
-    setLoading,
-    setError,
-    updateSessionContext,
-    updateSessionConfig,
-  } = useProjectsStore();
+  const currentProject = useProjectsStore((state) => state.currentProject);
+  const currentSession = useProjectsStore((state) => state.currentSession);
+  const setCurrentSession = useProjectsStore(
+    (state) => state.setCurrentSession,
+  );
+  const setLoading = useProjectsStore((state) => state.setLoading);
+  const setError = useProjectsStore((state) => state.setError);
+  const updateSessionContext = useProjectsStore(
+    (state) => state.updateSessionContext,
+  );
+  const updateSessionConfig = useProjectsStore(
+    (state) => state.updateSessionConfig,
+  );
 
   const { showMobileSettings, activeMobileTab, prompt, setStudioState } =
-    useStudioUIStore();
+    useStudioUIStore(
+      useShallow((state) => ({
+        showMobileSettings: state.showMobileSettings,
+        activeMobileTab: state.activeMobileTab,
+        prompt: state.prompt,
+        setStudioState: state.setStudioState,
+      })),
+    );
 
   const [retryCount, setRetryCount] = useState(0);
 
@@ -34,7 +48,9 @@ export const StudioMobileSheet = () => {
   } = useStudioGeneration({
     prompt,
     context: currentSession?.context || '',
-    config: currentSession?.config || currentProject?.pages[0]?.config || {},
+    config: (currentSession?.config ||
+      currentProject?.pages[0]?.config ||
+      DEFAULT_MANGA_CONFIG) as MangaConfig,
     project: currentProject!,
     setProject: () => {},
     currentSession,
@@ -106,7 +122,10 @@ export const StudioMobileSheet = () => {
                 batchProgress={batchProgress}
                 generationProgress={generationProgress}
                 retryCount={retryCount}
-                config={currentSession?.config || {}}
+                config={
+                  (currentSession?.config ||
+                    DEFAULT_MANGA_CONFIG) as MangaConfig
+                }
                 onPromptChange={(p) => setStudioState({ prompt: p })}
                 onGenerate={() => {
                   handleGenerate();
@@ -123,7 +142,10 @@ export const StudioMobileSheet = () => {
             <div className="p-4 pb-8">
               <StorySettingsPanel
                 context={currentSession?.context || ''}
-                config={currentSession?.config || {}}
+                config={
+                  (currentSession?.config ||
+                    DEFAULT_MANGA_CONFIG) as MangaConfig
+                }
                 onContextChange={updateSessionContext}
                 onConfigChange={updateSessionConfig}
               />

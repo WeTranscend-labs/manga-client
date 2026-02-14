@@ -1,5 +1,6 @@
 'use client';
 
+import { Icons } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -8,7 +9,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { DialogProps } from '@/components/ui/modal';
-import { Copy, ExternalLink, LogOut, Network, Wallet } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface WalletDetailsModalProps extends DialogProps {
@@ -41,7 +41,7 @@ export function WalletDetailsModal({
       <DialogContent className="max-w-sm bg-zinc-950 border-zinc-800 text-zinc-100">
         <DialogHeader className="border-b border-zinc-900 pb-4">
           <DialogTitle className="flex items-center gap-2 text-zinc-100">
-            <Wallet className="text-amber-500" size={20} />
+            <Icons.Wallet className="text-amber-500" size={20} />
             Wallet Connection
           </DialogTitle>
         </DialogHeader>
@@ -62,14 +62,14 @@ export function WalletDetailsModal({
                   className="p-1.5 hover:bg-zinc-800 rounded-lg text-zinc-400 hover:text-amber-400 transition-all"
                   title="Copy Address"
                 >
-                  <Copy size={14} />
+                  <Icons.Copy size={14} />
                 </button>
                 <button
                   onClick={handleOpenExplorer}
                   className="p-1.5 hover:bg-zinc-800 rounded-lg text-zinc-400 hover:text-amber-400 transition-all"
                   title="View on Explorer"
                 >
-                  <ExternalLink size={14} />
+                  <Icons.ExternalLink size={14} />
                 </button>
               </div>
             </div>
@@ -84,7 +84,7 @@ export function WalletDetailsModal({
               <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
               <div className="flex flex-col">
                 <span className="text-sm font-bold text-zinc-100 flex items-center gap-1.5">
-                  <Network size={14} className="text-emerald-500" />
+                  <Icons.Network size={14} className="text-emerald-500" />
                   Polkadot Hub TestNet
                 </span>
                 <span className="text-[10px] text-zinc-500">
@@ -104,7 +104,7 @@ export function WalletDetailsModal({
               onDismiss();
             }}
           >
-            <LogOut size={18} />
+            <Icons.LogOut size={18} />
             <span className="font-bold text-xs">Disconnect Wallet</span>
           </Button>
 
