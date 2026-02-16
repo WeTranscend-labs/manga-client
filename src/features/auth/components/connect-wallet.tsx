@@ -5,12 +5,18 @@ import { Button } from '@/components/ui/button';
 import { useModal } from '@/components/ui/modal';
 import { WalletConnectModal } from '@/features/auth/components/modals/wallet-connect-modal';
 import { WalletDetailsModal } from '@/features/auth/components/modals/wallet-details-modal';
+import { useAuth, useIdentityLogin } from '@/hooks/use-auth';
+import { cn } from '@/utils/utils';
 import { usePrivy as useWallet, useWallets } from '@privy-io/react-auth';
 
-export function ConnectWallet() {
+interface ConnectWalletProps {
+  className?: string;
+}
+
+export function ConnectWallet({ className }: ConnectWalletProps) {
   const {
     logout: disconnectWallet,
-    authenticated,
+    authenticated: isWeb3Authenticated,
     user: walletUser,
     ready,
     login: loginOrLink,
@@ -18,6 +24,9 @@ export function ConnectWallet() {
 
   const { wallets } = useWallets();
   const hasConnectedWallet = wallets.length > 0;
+
+  const { isAuthenticated, isSyncing } = useAuth();
+  const { mutate: identityLogin } = useIdentityLogin();
 
   const [presentWalletDetails] = useModal(WalletDetailsModal);
   const [presentWalletConnect] = useModal(WalletConnectModal);
@@ -36,7 +45,7 @@ export function ConnectWallet() {
   };
 
   const handleConnectClick = () => {
-    if (hasConnectedWallet && !authenticated) {
+    if (hasConnectedWallet && !isWeb3Authenticated) {
       // Wallet connected but not authenticated, trigger signature
       loginOrLink();
     } else {
@@ -47,9 +56,11 @@ export function ConnectWallet() {
 
   if (!ready) return null;
 
-  if (authenticated) {
+  const isLoggingIn = isSyncing;
+
+  if (isAuthenticated) {
     return (
-      <div className="flex items-center gap-3">
+      <div className={cn('flex items-center gap-3', className)}>
         <div className="hidden lg:flex flex-col items-end">
           <span className="text-[10px] font-bold text-amber-500/80 flex items-center gap-1 leading-none mb-0.5 tracking-wider">
             <Icons.Network size={10} />
@@ -76,18 +87,26 @@ export function ConnectWallet() {
   return (
     <Button
       onClick={handleConnectClick}
-      disabled={!ready}
+      disabled={!ready || isLoggingIn}
       variant="outline"
-      size="sm"
-      className="gap-2 bg-zinc-900/50 border-amber-500/20 hover:border-amber-500/50 hover:bg-zinc-900 text-amber-500 hover:text-amber-400 h-9 font-semibold transition-all shadow-[0_0_10px_-5px_theme(colors.amber.500/20)] hover:shadow-[0_0_15px_-5px_theme(colors.amber.500/30)]"
+      className={cn(
+        'w-full rounded-xl h-10 gap-2 bg-zinc-950 border-amber-500/20 hover:border-amber-500/50 hover:bg-zinc-900/80 text-amber-500 hover:text-amber-400 font-semibold transition-all shadow-[0_0_10px_-5px_rgba(245,158,11,0.1)] hover:shadow-[0_0_15px_-5px_rgba(245,158,11,0.2)]',
+        className,
+      )}
     >
-      <Icons.Wallet size={14} />
-      <span className="hidden sm:inline">
-        {hasConnectedWallet ? 'Sign In with Wallet' : 'Connect Wallet'}
-      </span>
-      <span className="sm:hidden">
-        {hasConnectedWallet ? 'Sign In' : 'Connect'}
-      </span>
+      {isLoggingIn ? (
+        <>
+          <span className="w-4 h-4 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
+          <span>Signing In...</span>
+        </>
+      ) : (
+        <>
+          <Icons.Wallet size={16} />
+          <span>
+            {hasConnectedWallet ? 'Sign In with Wallet' : 'Connect Wallet'}
+          </span>
+        </>
+      )}
     </Button>
   );
 }

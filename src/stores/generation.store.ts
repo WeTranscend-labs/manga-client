@@ -1,6 +1,6 @@
+import { GenerationHistory } from '@/types/generate';
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
-import { GenerationHistory } from '../api/generate';
 
 interface GenerationState {
   // State

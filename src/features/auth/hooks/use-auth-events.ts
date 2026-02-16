@@ -1,9 +1,9 @@
+import { useAuth } from '@/hooks/use-auth';
 import { authEventBus } from '@/lib';
-import { useAuthStore } from '@/stores/auth.store';
 import { useEffect } from 'react';
 
 export const useAuthEvents = () => {
-  const { logout, clear } = useAuthStore();
+  const { logout, clear } = useAuth();
 
   useEffect(() => {
     const handleSessionExpired = () => {

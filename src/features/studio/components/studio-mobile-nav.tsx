@@ -2,6 +2,7 @@
 import { Route } from '@/constants';
 import { useProjectsStore } from '@/stores/projects.store';
 import { useStudioUIStore } from '@/stores/studio-ui.store';
+import { formatUrl } from '@/utils/api-formatter';
 import { Eye, Layers, Settings, Sparkles } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useShallow } from 'zustand/react/shallow';
@@ -129,7 +130,7 @@ export const StudioMobileNav = () => {
 
         {/* Preview Button */}
         <button
-          onClick={() => router.push(Route.STUDIO_PREVIEW)}
+          onClick={() => router.push(formatUrl(Route.STUDIO_PREVIEW))}
           className="flex flex-col items-center justify-center gap-1 flex-1 h-full rounded-xl transition-all text-zinc-400 hover:bg-zinc-800/40 hover:text-zinc-300 relative"
         >
           <Eye size={20} />

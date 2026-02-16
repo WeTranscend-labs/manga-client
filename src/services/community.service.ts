@@ -108,7 +108,7 @@ class CommunityService extends AppApiClient {
    */
   async fetchTrendingProjects(limit: number = 10): Promise<MangaProject[]> {
     try {
-      const url = `${ApiEndpoints.COMMUNITY_TRENDING}?limit=${limit}`;
+      const url = formatUrl(ApiEndpoints.COMMUNITY_TRENDING, { limit });
       return await this.get<MangaProject[]>(url);
     } catch (error) {
       console.error('Failed to fetch trending projects:', error);
@@ -125,11 +125,11 @@ class CommunityService extends AppApiClient {
     limit: number = 6,
   ): Promise<MangaProject[]> {
     try {
-      const path = formatUrl(ApiEndpoints.COMMUNITY_RELATED, {
+      const url = formatUrl(ApiEndpoints.COMMUNITY_RELATED, {
         ownerId,
         projectId,
+        limit,
       });
-      const url = `${path}?limit=${limit}`;
       return await this.get<MangaProject[]>(url);
     } catch (error) {
       console.error('Failed to fetch related projects:', error);

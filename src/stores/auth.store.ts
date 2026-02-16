@@ -8,15 +8,18 @@ interface AuthState {
   accessToken: string | null;
   refreshToken: string | null;
   isAuthenticated: boolean;
+  isSyncing: boolean;
   error: string | null;
 
   // Actions
+  setSyncing: (isSyncing: boolean) => void;
   setUser: (user: User | null) => void;
   setTokens: (accessToken: string, refreshToken: string) => void;
   loadFromStorage: () => void;
   clear: () => void;
   setError: (err: string | null) => void;
   logout: () => void;
+  updateCredits: (credits: number) => void;
 }
 
 const initialState = {
@@ -24,6 +27,7 @@ const initialState = {
   accessToken: null,
   refreshToken: null,
   isAuthenticated: false,
+  isSyncing: false,
   error: null,
 };
 
@@ -32,6 +36,8 @@ export const useAuthStore = create<AuthState>()(
     persist(
       (set) => ({
         ...initialState,
+
+        setSyncing: (isSyncing) => set({ isSyncing }),
 
         setUser: (user) => set({ user, isAuthenticated: !!user }),
 
@@ -77,6 +83,11 @@ export const useAuthStore = create<AuthState>()(
           }
           set(initialState);
         },
+
+        updateCredits: (credits) =>
+          set((state) => ({
+            user: state.user ? { ...state.user, credits } : null,
+          })),
       }),
       {
         name: 'auth-store',

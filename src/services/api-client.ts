@@ -58,27 +58,36 @@ export class ApiClient {
         const originalRequest = error.config as InternalAxiosRequestConfig &
           ApiRequestConfig;
 
-        if (error.response?.status === 401 && !originalRequest._retry) {
-          console.log('[ApiClient] 401 detected, attempting refresh');
-          originalRequest._retry = true;
-
-          try {
-            const newToken = await this.refreshAccessToken();
-            if (newToken) {
-              console.log('[ApiClient] Token refreshed successfully');
-              if (originalRequest.headers) {
-                originalRequest.headers.Authorization = `Bearer ${newToken}`;
-              }
-              return this.instance(originalRequest);
-            }
-          } catch (refreshError) {
-            console.error('[ApiClient] Token refresh failed', refreshError);
-            // Refresh failed
+        if (error.response?.status === 401) {
+          // If the request that failed with 401 was the refresh request itself, logout immediately
+          if (originalRequest.url?.includes('/api/auth/refresh')) {
+            console.log('[ApiClient] Refresh token failed, logging out');
+            this.config.onSessionExpired();
+            authEventBus.emit('SESSION_EXPIRED');
+            return Promise.reject(error);
           }
 
-          console.log('[ApiClient] Session expired, clearing auth');
-          this.config.onSessionExpired();
-          authEventBus.emit('SESSION_EXPIRED');
+          if (!originalRequest._retry) {
+            console.log('[ApiClient] 401 detected, attempting refresh');
+            originalRequest._retry = true;
+
+            try {
+              const newToken = await this.refreshAccessToken();
+              if (newToken) {
+                console.log('[ApiClient] Token refreshed successfully');
+                if (originalRequest.headers) {
+                  originalRequest.headers.Authorization = `Bearer ${newToken}`;
+                }
+                return this.instance(originalRequest);
+              }
+            } catch (refreshError) {
+              console.error('[ApiClient] Token refresh failed', refreshError);
+            }
+
+            console.log('[ApiClient] Session expired, clearing auth');
+            this.config.onSessionExpired();
+            authEventBus.emit('SESSION_EXPIRED');
+          }
         }
 
         const message =

@@ -1,9 +1,10 @@
 import { Providers } from '@/components/providers';
 import { Toaster } from '@/components/ui/sonner';
+import { Footer, Header } from '@/features/landing';
 import { Analytics } from '@vercel/analytics/next';
 import type { Metadata } from 'next';
 import { Bangers, Geist_Mono, Inter } from 'next/font/google';
-import React from 'react';
+import { ReactNode, Suspense } from 'react';
 import './globals.css';
 
 const _bangers = Bangers({ weight: '400', subsets: ['latin'] });
@@ -31,14 +32,24 @@ export const metadata: Metadata = {
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode;
+  children: ReactNode;
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body
         className={`${inter.variable} font-sans antialiased bg-zinc-950 text-white`}
       >
-        <Providers>{children}</Providers>
+        <Providers>
+          <div className="min-h-screen flex flex-col">
+            <Suspense fallback={null}>
+              <Header />
+            </Suspense>
+            <div className="flex-1 flex flex-col">
+              <Suspense fallback={null}>{children}</Suspense>
+            </div>
+            <Footer />
+          </div>
+        </Providers>
         <Toaster />
         <Analytics />
       </body>

@@ -1,5 +1,3 @@
-import { MangaStudio } from '@/features/studio';
+import { StudioPage } from '@/features/studio/pages/studio-page';
 
-export default function AppPage() {
-  return <MangaStudio />;
-}
+export default StudioPage;

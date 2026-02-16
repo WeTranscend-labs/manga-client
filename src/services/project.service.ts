@@ -64,10 +64,7 @@ class ProjectService extends AppApiClient {
    * Search public projects.
    */
   async searchPublicProjects(params: Record<string, any>): Promise<Project[]> {
-    const queryString = new URLSearchParams(params).toString();
-    const url = queryString
-      ? `${ApiEndpoints.PROJECTS_PUBLIC}?${queryString}`
-      : ApiEndpoints.PROJECTS_PUBLIC;
+    const url = formatUrl(ApiEndpoints.PROJECTS_PUBLIC, params);
     return this.get<Project[]>(url);
   }
 

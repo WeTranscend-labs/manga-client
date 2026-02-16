@@ -3,7 +3,7 @@ export function Footer() {
 
   return (
     <footer className=" border-t border-zinc-800/70 bg-zinc-950/80">
-      <div className="mx-auto flex  flex-col gap-4  py-8 text-xs text-zinc-400 sm:flex-row sm:items-center sm:justify-between">
+      <div className="container mx-auto flex flex-col gap-4 py-8 text-xs text-zinc-400 sm:flex-row sm:items-center sm:justify-between px-4 sm:px-6 lg:px-8">
         <div className="space-y-1">
           <p className="font-manga text-sm text-zinc-100">Manga Studio</p>
           <p className="max-w-md leading-relaxed">

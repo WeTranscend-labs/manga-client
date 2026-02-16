@@ -1,13 +1,3 @@
-import { Header } from '@/features/landing/components/header';
-import { Hero } from '@/features/landing/components/hero';
+import { LandingV2Page } from '@/features/landing/pages/landing-page';
 
-export default function LandingV2Page() {
-  return (
-    <div className="min-h-screen bg-black text-white">
-      <Header />
-      <main>
-        <Hero />
-      </main>
-    </div>
-  );
-}
+export default LandingV2Page;

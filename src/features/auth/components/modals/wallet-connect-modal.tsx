@@ -8,7 +8,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { DialogProps } from '@/components/ui/modal';
-import { useConnectWallet } from '@privy-io/react-auth';
+import { useWalletLogin } from '../../hooks/use-wallet-login';
 
 const WALLET_OPTIONS = [
   {
@@ -38,12 +38,11 @@ const WALLET_OPTIONS = [
 ] as const;
 
 export function WalletConnectModal({ isOpen, onDismiss }: DialogProps) {
-  const { connectWallet } = useConnectWallet({
-    onSuccess: (wallet) => {
-      console.log('Wallet connected:', wallet);
-      onDismiss();
-    },
-  });
+  const { loginWithWallet, isLoading } = useWalletLogin(onDismiss);
+
+  const handleWalletLogin = async (walletId: string) => {
+    await loginWithWallet(walletId);
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={(val) => !val && onDismiss()}>
@@ -66,8 +65,9 @@ export function WalletConnectModal({ isOpen, onDismiss }: DialogProps) {
           {WALLET_OPTIONS.map((wallet) => (
             <button
               key={wallet.id}
-              onClick={() => connectWallet({ preSelectedWalletId: wallet.id })}
-              className={`flex flex-col items-center justify-center gap-3 p-5 bg-zinc-900/30 border border-zinc-800/50 rounded-2xl transition-all duration-300 group relative hover:bg-zinc-800/40 hover:-translate-y-1 ${wallet.color}`}
+              onClick={() => handleWalletLogin(wallet.id)}
+              disabled={isLoading}
+              className={`flex flex-col items-center justify-center gap-3 p-5 bg-zinc-900/30 border border-zinc-800/50 rounded-2xl transition-all duration-300 group relative hover:bg-zinc-800/40 hover:-translate-y-1 ${wallet.color} ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               <div className="relative">
                 {/* Glow effect on hover */}

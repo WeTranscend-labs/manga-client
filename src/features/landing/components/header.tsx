@@ -10,9 +10,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useModal } from '@/components/ui/modal';
 import { Route } from '@/constants';
+import { BuyCreditsModal } from '@/features/billing/components/modals/buy-credits-modal';
 import { useLogout, useUser } from '@/hooks/use-auth';
 import { useAuthStore } from '@/stores/auth.store';
+import { formatUrl } from '@/utils/api-formatter';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -22,6 +25,7 @@ export function Header() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const { data: profile } = useUser();
   const { mutate: logout } = useLogout();
+  const [presentBuyCredits] = useModal(BuyCreditsModal);
 
   const handleSignOut = () => {
     logout();
@@ -32,9 +36,9 @@ export function Header() {
   };
 
   return (
-    <header className="h-16 flex items-center justify-between">
+    <header className="h-16 flex items-center justify-between container mx-auto px-4 sm:px-6 lg:px-8">
       <div className="flex items-center gap-8">
-        <Link href="/" className="flex items-center gap-2">
+        <Link href={Route.HOME} className="flex items-center gap-2">
           <div className="relative w-20 h-10 overflow-hidden rounded-lg border  bg-white flex items-center justify-center">
             <Image
               src="/logo.png"
@@ -67,7 +71,7 @@ export function Header() {
             Pricing
           </Link>
           <Link
-            href="/community"
+            href={Route.COMMUNITY}
             className="text-muted-foreground text-sm hover:text-foreground transition-colors"
           >
             Community
@@ -78,16 +82,31 @@ export function Header() {
       <div className="flex items-center gap-3">
         {isAuthenticated ? (
           <div className="flex items-center gap-3">
+            {/* Credits Display */}
+            <div className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 bg-zinc-900/50 border border-zinc-800 rounded-full">
+              <Icons.Logo className="text-amber-500" size={14} />
+              <span className="text-xs font-bold text-zinc-100">
+                {profile?.credits || 0}
+              </span>
+              <button
+                onClick={() => presentBuyCredits()}
+                className="ml-1 p-1 hover:bg-zinc-800 rounded-full text-amber-500 transition-colors"
+                title="Mua Credits"
+              >
+                <Icons.Plus size={12} />
+              </button>
+            </div>
+
             <Button
               asChild
               variant="ghost"
               size="sm"
               className="hidden sm:inline-flex text-zinc-400 hover:text-white hover:bg-zinc-800"
             >
-              <Link href="/studio">Studio</Link>
+              <Link href={Route.STUDIO}>Studio</Link>
             </Button>
             <AnimatedShinyButton
-              url="/community"
+              url={Route.COMMUNITY}
               className="hidden sm:inline-flex text-xs h-9 px-4 [--shiny-cta-highlight:#38bdf8] [--shiny-cta-highlight-subtle:#0ea5e9]"
             >
               <span
@@ -129,7 +148,7 @@ export function Header() {
                 <DropdownMenuSeparator className="bg-zinc-800" />
                 <DropdownMenuItem
                   className="cursor-pointer focus:bg-zinc-800 focus:text-white"
-                  onClick={() => router.push('/profile')}
+                  onClick={() => router.push(formatUrl(Route.PROFILE))}
                 >
                   <Icons.User className="mr-2 h-4 w-4 text-zinc-400 " />
                   Profile
@@ -153,10 +172,10 @@ export function Header() {
               size="sm"
               className="hidden sm:inline-flex text-zinc-400 hover:text-white hover:bg-zinc-800 h-9"
             >
-              <Link href="/auth/login">Sign In</Link>
+              <Link href={Route.LOGIN}>Sign In</Link>
             </Button>
 
-            <Link href="/auth/login" className="sm:hidden">
+            <Link href={Route.LOGIN} className="sm:hidden">
               <Avatar className="h-9 w-9 cursor-pointer border border-zinc-700 hover:border-amber-400 transition-colors">
                 <AvatarFallback className="bg-zinc-800 text-amber-400 text-sm font-semibold">
                   <Icons.User className="h-4 w-4" />

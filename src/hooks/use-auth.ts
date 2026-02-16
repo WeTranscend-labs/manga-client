@@ -1,7 +1,31 @@
+import { Route } from '@/constants';
 import { authService } from '@/services/auth.service';
 import { useAuthStore } from '@/stores/auth.store';
+import { removeCookie, setCookie } from '@/utils/cookies';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useShallow } from 'zustand/react/shallow';
+
+// Safe hook for consuming auth state
+export const useAuth = () => {
+  return useAuthStore(
+    useShallow((state) => ({
+      user: state.user,
+      accessToken: state.accessToken,
+      refreshToken: state.refreshToken,
+      isAuthenticated: state.isAuthenticated,
+      isSyncing: state.isSyncing,
+      error: state.error,
+      setSyncing: state.setSyncing,
+      setUser: state.setUser,
+      setTokens: state.setTokens,
+      loadFromStorage: state.loadFromStorage,
+      clear: state.clear,
+      setError: state.setError,
+      logout: state.logout,
+    })),
+  );
+};
 
 // Types matching actual API response
 export interface User {
@@ -20,13 +44,15 @@ export interface User {
     notifications: boolean;
   };
   isEmailVerified: boolean;
-  createdAt: string;
+  address?: string;
+  credits?: number;
 }
 
 export interface AuthResponse {
   user: User;
   accessToken: string;
   refreshToken: string;
+  redirectUrl?: string; // Optional redirect URL from backend
 }
 
 export const authKeys = {
@@ -58,12 +84,16 @@ export function useLogin() {
     mutationFn: (credentials: any) => authService.login(credentials),
     onSuccess: (data) => {
       setTokens(data.accessToken, data.refreshToken);
+      setCookie('accessToken', data.accessToken);
+      setCookie('refreshToken', data.refreshToken);
       setUser(data.user);
       // Update user cache
       queryClient.setQueryData(authKeys.user, data.user);
 
       // Redirect
-      const returnUrl = searchParams.get('returnUrl') || '/studio';
+      // Check for backend provided redirectUrl first, then returnUrl param, then default
+      const returnUrl =
+        data.redirectUrl || searchParams.get('returnUrl') || Route.STUDIO;
       router.push(returnUrl);
     },
   });
@@ -79,9 +109,38 @@ export function useRegister() {
     mutationFn: (data: any) => authService.register(data),
     onSuccess: (data) => {
       setTokens(data.accessToken, data.refreshToken);
+      setCookie('accessToken', data.accessToken);
+      setCookie('refreshToken', data.refreshToken);
       setUser(data.user);
       queryClient.setQueryData(authKeys.user, data.user);
-      router.push('/studio'); // Or profile setup
+      // Check for backend provided redirectUrl
+      const returnUrl = data.redirectUrl || Route.STUDIO;
+      router.push(returnUrl);
+    },
+  });
+}
+
+export function useIdentityLogin() {
+  const queryClient = useQueryClient();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const setTokens = useAuthStore((state) => state.setTokens);
+  const setUser = useAuthStore((state) => state.setUser);
+
+  return useMutation({
+    mutationFn: (token: string) => authService.identityLogin(token),
+    onSuccess: (data) => {
+      setTokens(data.accessToken, data.refreshToken);
+      setCookie('accessToken', data.accessToken);
+      setCookie('refreshToken', data.refreshToken);
+      setUser(data.user);
+      // Update user cache
+      queryClient.setQueryData(authKeys.user, data.user);
+
+      // Redirect
+      const returnUrl =
+        data.redirectUrl || searchParams.get('returnUrl') || Route.STUDIO;
+      router.push(returnUrl);
     },
   });
 }
@@ -96,8 +155,10 @@ export function useLogout() {
     onSettled: () => {
       // Always clear local state even if server logout fails
       logout();
+      removeCookie('accessToken');
+      removeCookie('refreshToken');
       queryClient.clear(); // Clear all queries
-      router.push('/auth/login');
+      router.push(Route.LOGIN);
     },
   });
 }

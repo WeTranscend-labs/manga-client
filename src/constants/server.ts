@@ -2,6 +2,7 @@ export enum ApiEndpoints {
   // Authentication
   AUTH_LOGIN = '/api/auth/login',
   AUTH_REGISTER = '/api/auth/register',
+  AUTH_IDENTITY_LOGIN = '/api/auth/identity-login',
   AUTH_REFRESH = '/api/auth/refresh',
   AUTH_LOGOUT = '/api/auth/logout',
   AUTH_PROFILE = '/api/auth/profile',
@@ -66,6 +67,4 @@ export enum ApiEndpoints {
   GROK_HISTORY = '/api/grok/history',
 }
 
-export const BACKEND_BASE_URL =
-  process.env.NEXT_PUBLIC_BACKEND_URL ||
-  'https://backend-manga-generator.onrender.com';
+export const BACKEND_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;

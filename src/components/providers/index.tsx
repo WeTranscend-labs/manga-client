@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { ReactNode, Suspense } from 'react';
 import { AuthProvider } from './auth-provider';
 import { QueryProvider } from './query-provider';
 import { UIProvider } from './ui-provider';
@@ -8,14 +8,16 @@ import { WalletProvider } from './wallet-provider';
 export function Providers({ children }: { children: ReactNode }) {
   return (
     <QueryProvider>
-      <UIProvider>
-        <WalletProvider>
-          <AuthProvider>
-            <Updater />
-            {children}
-          </AuthProvider>
-        </WalletProvider>
-      </UIProvider>
+      <WalletProvider>
+        <UIProvider>
+          <Suspense fallback={null}>
+            <AuthProvider>
+              <Updater />
+              {children}
+            </AuthProvider>
+          </Suspense>
+        </UIProvider>
+      </WalletProvider>
     </QueryProvider>
   );
 }

@@ -3,6 +3,7 @@ export enum Route {
   LANDING = '/landing-v2',
   LOGIN = '/auth/login',
   REGISTER = '/auth/register',
+  FORGOT_PASSWORD = '/auth/forgot-password',
   STUDIO = '/studio',
   STUDIO_CANVAS = '/studio/canvas-editor',
   STUDIO_DIALOGUE = '/studio/dialogue-editor',

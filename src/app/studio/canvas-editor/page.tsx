@@ -1,3 +1,3 @@
-import { CanvasEditor } from '@/features/canvas-editor';
+import { CanvasEditorPage } from '@/features/canvas-editor/pages/canvas-editor-page';
 
-export default CanvasEditor;
+export default CanvasEditorPage;

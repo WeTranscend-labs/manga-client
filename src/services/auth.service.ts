@@ -25,6 +25,15 @@ class AuthService extends AppApiClient {
   }
 
   /**
+   * Log in a user using a third-party identity token (e.g. Privy).
+   * @param token - The identity token
+   * @returns AuthResponse containing tokens and user data
+   */
+  async identityLogin(token: string): Promise<AuthResponse> {
+    return this.post<AuthResponse>(ApiEndpoints.AUTH_IDENTITY_LOGIN, { token });
+  }
+
+  /**
    * Log out the current user.
    */
   async logout(): Promise<void> {

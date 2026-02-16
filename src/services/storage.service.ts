@@ -83,10 +83,7 @@ class StorageService extends AppApiClient {
       if (tags && tags.length > 0) params.tags = tags.join(',');
       if (ownerId) params.ownerId = ownerId;
 
-      // Note: We use the base request because we need to append query params manually for now
-      // or we could enhance the ApiClient to support query params in get().
-      const queryString = new URLSearchParams(params).toString();
-      const url = `${ApiEndpoints.PROJECTS_PUBLIC}?${queryString}`;
+      const url = formatUrl(ApiEndpoints.PROJECTS_PUBLIC, params);
 
       const res = await this.get<any>(url);
       const projects = res?.projects ?? [];
@@ -112,7 +109,7 @@ class StorageService extends AppApiClient {
         ownerId,
         projectId,
       });
-      const url = trackView ? `${path}?trackView=true` : path;
+      const url = formatUrl(path, { trackView });
       return await this.get<MangaProject>(url);
     } catch (error) {
       console.error('Failed to fetch public project detail:', error);
@@ -125,7 +122,7 @@ class StorageService extends AppApiClient {
    */
   async loadProject(id: string = 'default'): Promise<MangaProject | null> {
     try {
-      const url = `${ApiEndpoints.PROJECTS_LIST}?id=${encodeURIComponent(id)}`;
+      const url = formatUrl(ApiEndpoints.PROJECTS_LIST, { id });
       return await this.get<MangaProject>(url);
     } catch (error) {
       console.error('Failed to load project:', error);
@@ -156,7 +153,7 @@ class StorageService extends AppApiClient {
    * Delete project from backend
    */
   async deleteProject(id: string = 'default'): Promise<void> {
-    const url = `${ApiEndpoints.PROJECTS_LIST}?id=${encodeURIComponent(id)}`;
+    const url = formatUrl(ApiEndpoints.PROJECTS_LIST, { id });
     await this.delete(url);
   }
 
@@ -164,7 +161,10 @@ class StorageService extends AppApiClient {
    * Delete a single session from a project
    */
   async deleteSession(projectId: string, sessionId: string): Promise<void> {
-    const url = `${ApiEndpoints.PROJECT_SESSIONS}?projectId=${encodeURIComponent(projectId)}&sessionId=${encodeURIComponent(sessionId)}`;
+    const url = formatUrl(ApiEndpoints.PROJECT_SESSIONS, {
+      projectId,
+      sessionId,
+    });
     await this.delete(url);
   }
 
@@ -174,7 +174,13 @@ class StorageService extends AppApiClient {
   async deletePages(projectId: string, pageIds: string[]): Promise<void> {
     if (!pageIds || pageIds.length === 0) return;
 
-    const url = `${ApiEndpoints.PROJECT_PAGE_UPDATE.replace('/{{pageId}}', '')}?projectId=${encodeURIComponent(projectId)}&pageIds=${encodeURIComponent(pageIds.join(','))}`;
+    const url = formatUrl(
+      ApiEndpoints.PROJECT_PAGE_UPDATE.replace('/{{pageId}}', ''),
+      {
+        projectId,
+        pageIds: pageIds.join(','),
+      },
+    );
     // Fallback if specific DELETE endpoint for multiple pages isn't clear, assuming same as sessions/pages logic
     await this.delete(url);
   }
@@ -184,7 +190,7 @@ class StorageService extends AppApiClient {
    */
   async deleteImage(imageId: string): Promise<void> {
     if (!imageId) return;
-    const url = `${ApiEndpoints.IMAGES_DELETE}?id=${encodeURIComponent(imageId)}`;
+    const url = formatUrl(ApiEndpoints.IMAGES_DELETE, { id: imageId });
     await this.delete(url);
   }
 
@@ -193,7 +199,9 @@ class StorageService extends AppApiClient {
    */
   async deleteImages(imageIds: string[]): Promise<void> {
     if (!imageIds || imageIds.length === 0) return;
-    const url = `${ApiEndpoints.IMAGES_DELETE}?ids=${encodeURIComponent(imageIds.join(','))}`;
+    const url = formatUrl(ApiEndpoints.IMAGES_DELETE, {
+      ids: imageIds.join(','),
+    });
     await this.delete(url);
   }
 

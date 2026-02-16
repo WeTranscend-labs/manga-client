@@ -4,6 +4,7 @@ import { authStore } from '@/stores/auth.store';
 import { useProjectsStore } from '@/stores/projects.store';
 import { useStudioUIStore } from '@/stores/studio-ui.store';
 import { useUIStore } from '@/stores/ui.store';
+import { formatUrl } from '@/utils/api-formatter';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -156,7 +157,9 @@ export const StudioHeader = () => {
           )}
         </button>
         <button
-          onClick={() => router.push(`${Route.STUDIO_PREVIEW}?autoDownload=1`)}
+          onClick={() =>
+            router.push(formatUrl(Route.STUDIO_PREVIEW, { autoDownload: 1 }))
+          }
           className="hidden sm:flex px-3 lg:px-4 py-1.5 bg-zinc-900 border border-zinc-700 text-zinc-100 rounded-lg text-xs lg:text-sm font-semibold items-center gap-1.5 hover:bg-zinc-800 hover:border-zinc-500 transition-all"
           style={{ fontFamily: 'var(--font-inter)' }}
         >

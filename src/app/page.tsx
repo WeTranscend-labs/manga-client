@@ -1,9 +1,8 @@
+import { Page } from '@/components/layout/page';
 import {
   AnimatedMangaListSection,
   AutoContinueSection,
   FeaturesSection,
-  Footer,
-  Header,
   Hero,
   HolographicShowcaseSection,
   RecentCreationsSection,
@@ -11,15 +10,13 @@ import {
 
 export default function LandingPage() {
   return (
-    <div className=" lg:px-50 sm:px-10 ">
-      <Header />
+    <Page className="py-12 lg:px-50 sm:px-10">
       <Hero />
       <AutoContinueSection />
       <AnimatedMangaListSection />
       <HolographicShowcaseSection />
       <RecentCreationsSection />
       <FeaturesSection />
-      <Footer />
-    </div>
+    </Page>
   );
 }

@@ -87,13 +87,12 @@ export function ModalContainer() {
         const componentProps = {
           isOpen: true,
           onDismiss: handleClose,
-          ...props, // Spread props so they are available directly
-          key: id,
+          ...props,
         };
 
         if (React.isValidElement(Component)) {
           // @ts-ignore
-          return React.cloneElement(Component, componentProps);
+          return React.cloneElement(Component, { ...componentProps, key: id });
         }
 
         // @ts-ignore
