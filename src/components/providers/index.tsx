@@ -1,3 +1,4 @@
+import { Analytics } from '@vercel/analytics/next';
 import { ReactNode, Suspense } from 'react';
 import { AuthProvider } from './auth-provider';
 import { QueryProvider } from './query-provider';
@@ -13,6 +14,8 @@ export function Providers({ children }: { children: ReactNode }) {
           <Suspense fallback={null}>
             <AuthProvider>
               <Updater />
+              <Analytics />
+
               {children}
             </AuthProvider>
           </Suspense>

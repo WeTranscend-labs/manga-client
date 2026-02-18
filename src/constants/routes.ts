@@ -11,6 +11,7 @@ export enum Route {
   STUDIO_PREVIEW = '/studio/preview',
   PROFILE = '/profile',
   COMMUNITY = '/community',
+  ERROR = '/error',
 }
 
 export const PUBLIC_ROUTES = [
@@ -18,4 +19,5 @@ export const PUBLIC_ROUTES = [
   Route.LANDING,
   Route.LOGIN,
   Route.REGISTER,
+  Route.ERROR,
 ];

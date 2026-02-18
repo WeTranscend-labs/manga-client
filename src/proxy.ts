@@ -1,22 +1,24 @@
+import { Route } from '@/constants/routes';
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const accessToken = request.cookies.get('accessToken')?.value;
   const { pathname } = request.nextUrl;
 
   const publicRoutes = [
-    '/',
-    '/auth/login',
-    '/auth/register',
-    '/auth/forgot-password',
+    Route.HOME,
+    Route.LOGIN,
+    Route.REGISTER,
+    Route.FORGOT_PASSWORD,
+    Route.ERROR,
   ];
   const isAuthRoute = pathname.startsWith('/auth');
-  const isPublicRoute = publicRoutes.includes(pathname);
+  const isPublicRoute = publicRoutes.includes(pathname as Route);
 
   // If user is authenticated and tries to access auth pages, redirect to studio
   if (isAuthRoute && accessToken) {
-    return NextResponse.redirect(new URL('/studio', request.url));
+    return NextResponse.redirect(new URL(Route.STUDIO, request.url));
   }
 
   // If user is NOT authenticated and tries to access protected pages
@@ -27,10 +29,10 @@ export function middleware(request: NextRequest) {
     !pathname.includes('.')
   ) {
     // If it's the root path, just allow it (landing page is public)
-    if (pathname === '/') return NextResponse.next();
+    if (pathname === Route.HOME) return NextResponse.next();
 
     // Redirect to login
-    return NextResponse.redirect(new URL('/auth/login', request.url));
+    return NextResponse.redirect(new URL(Route.LOGIN, request.url));
   }
 
   return NextResponse.next();

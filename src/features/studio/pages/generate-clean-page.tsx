@@ -92,7 +92,7 @@ export function GenerateCleanPage() {
   };
 
   return (
-    <div className="p-6 text-white">
+    <div className="flex-1 overflow-y-auto p-6 text-white custom-scrollbar">
       <div className="max-w-6xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold flex items-center gap-3">

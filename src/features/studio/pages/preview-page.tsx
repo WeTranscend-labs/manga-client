@@ -1,6 +1,7 @@
 'use client';
 
 import { LoadingPage } from '@/components/ui/loading';
+import { StudioButton } from '@/components/ui/studio-button';
 import { Route } from '@/constants';
 import { storageService } from '@/services/storage.service';
 import { GeneratedManga, MangaProject, MangaSession } from '@/types';
@@ -257,7 +258,7 @@ function PreviewContent() {
   }
 
   return (
-    <div className="min-h-screen bg-white print:min-h-0">
+    <div className="flex-1 overflow-y-auto bg-white print:overflow-visible custom-scrollbar">
       <div className="min-h-full p-4 md:p-8 print:p-0">
         <div className="max-w-4xl mx-auto space-y-12 export-container print:max-w-full print:space-y-0">
           <div className="flex flex-col md:flex-row md:justify-between md:items-center print:hidden border-b border-zinc-200 pb-6 mb-8 gap-4">
@@ -278,13 +279,13 @@ function PreviewContent() {
               </p>
             </div>
             <div className="flex gap-3 flex-wrap items-center">
-              <button
+              <StudioButton
                 onClick={() => setShowSessionPicker(true)}
-                className="px-6 py-3 bg-blue-500 text-white rounded-xl font-manga font-bold shadow-lg hover:bg-blue-400 transition-all flex items-center gap-2"
+                variant="primary"
               >
                 <Plus size={20} />
                 ADD FROM OTHER SESSIONS
-              </button>
+              </StudioButton>
 
               {/* PDF Quality Selector */}
               <div className="flex items-center gap-2 px-4 py-2 bg-zinc-100 rounded-xl border border-zinc-300">
@@ -295,7 +296,7 @@ function PreviewContent() {
                   onClick={() => setPdfQuality('high')}
                   className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
                     pdfQuality === 'high'
-                      ? 'bg-green-500 text-white shadow-lg'
+                      ? 'bg-[#2dd4bf] text-white shadow-lg'
                       : 'bg-white text-zinc-600 hover:bg-zinc-50'
                   }`}
                 >
@@ -313,9 +314,9 @@ function PreviewContent() {
                 </button>
               </div>
 
-              <button
+              <StudioButton
                 onClick={downloadPDF}
-                className="px-8 py-3 bg-linear-to-r from-green-500 to-emerald-500 text-white rounded-xl font-manga font-bold shadow-lg hover:from-green-600 hover:to-emerald-600 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                variant="success"
                 disabled={exportPages.length === 0 || loading}
                 title={
                   exportPages.length === 0
@@ -329,21 +330,23 @@ function PreviewContent() {
                     ? 'GENERATING...'
                     : `DOWNLOAD PDF (${exportPages.length})`}
                 </span>
-              </button>
-              <button
+              </StudioButton>
+
+              <StudioButton
                 onClick={() => window.print()}
-                className="px-6 py-3 bg-amber-500 text-black rounded-xl font-manga font-bold shadow-lg hover:bg-amber-400 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                variant="warning"
                 disabled={exportPages.length === 0 || loading}
                 title="Print preview"
               >
                 <span>PRINT</span>
-              </button>
-              <button
+              </StudioButton>
+
+              <StudioButton
                 onClick={() => router.push(Route.STUDIO)}
-                className="px-6 py-3 border border-zinc-300 rounded-xl text-zinc-600 font-manga font-bold hover:bg-zinc-50 transition-all"
+                variant="outline"
               >
                 BACK TO STUDIO
-              </button>
+              </StudioButton>
             </div>
           </div>
 
@@ -568,12 +571,13 @@ function PreviewContent() {
                   ? `You have ${currentSession.pages.length} images in this session. Click on them above to mark for PDF.`
                   : 'Mark pages with the checkmark icon in the studio or click images above.'}
               </p>
-              <button
+              <StudioButton
                 onClick={() => router.push(Route.STUDIO)}
-                className="mt-6 px-6 py-3 bg-amber-500 text-black rounded-xl font-manga font-bold hover:bg-amber-400 transition-all"
+                variant="warning"
+                className="mt-6"
               >
                 GO TO STUDIO
-              </button>
+              </StudioButton>
             </div>
           )}
         </div>

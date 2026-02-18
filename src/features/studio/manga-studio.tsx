@@ -14,7 +14,6 @@ import CanvasArea from './components/canvas-area';
 import ChatHistoryPanel from './components/chat-history-panel';
 import { StudioControls } from './components/studio-controls';
 import { StudioDialogs } from './components/studio-dialogs';
-import { StudioHeader } from './components/studio-header';
 import { StudioLeftSidebar } from './components/studio-left-sidebar';
 import { StudioMobileNav } from './components/studio-mobile-nav';
 import { StudioMobileSheet } from './components/studio-mobile-sheet';
@@ -98,44 +97,40 @@ export const MangaStudio = () => {
   }, []);
 
   return (
-    <div className="h-screen flex flex-col bg-zinc-950">
-      <StudioHeader />
+    <>
+      <StudioLeftSidebar />
+      <StudioControls />
 
-      <div className="flex-1 flex overflow-hidden">
-        <StudioLeftSidebar />
-        <StudioControls />
+      {/* Right Section - Canvas */}
+      <CanvasArea
+        loading={generationLoading}
+        generationProgress={generationProgress}
+        retryCount={retryCount}
+        currentImage={currentImage}
+        onShowFullscreen={() =>
+          setStudioState({
+            fullscreenPreview: {
+              open: true,
+              image: currentImage,
+              isFromCanvas: true,
+            },
+          })
+        }
+        onAddToProject={addToProject}
+        onDiscardImage={() => setStudioState({ currentImage: null })}
+      />
 
-        {/* Right Section - Canvas */}
-        <CanvasArea
-          loading={generationLoading}
-          generationProgress={generationProgress}
-          retryCount={retryCount}
-          currentImage={currentImage}
-          onShowFullscreen={() =>
-            setStudioState({
-              fullscreenPreview: {
-                open: true,
-                image: currentImage,
-                isFromCanvas: true,
-              },
-            })
-          }
-          onAddToProject={addToProject}
-          onDiscardImage={() => setStudioState({ currentImage: null })}
+      {/* Chat History Overlay */}
+      {showChat && currentSession && (
+        <ChatHistoryPanel
+          currentSession={currentSession}
+          onClose={() => setStudioState({ showChat: false })}
         />
+      )}
 
-        {/* Chat History Overlay */}
-        {showChat && currentSession && (
-          <ChatHistoryPanel
-            currentSession={currentSession}
-            onClose={() => setStudioState({ showChat: false })}
-          />
-        )}
-
-        {/* Mobile Components */}
-        <StudioMobileSidebar />
-        <StudioMobileSheet />
-      </div>
+      {/* Mobile Components */}
+      <StudioMobileSidebar />
+      <StudioMobileSheet />
 
       <style>{`
         /* Styles from original file */
@@ -158,6 +153,6 @@ export const MangaStudio = () => {
 
       <StudioDialogs />
       <StudioMobileNav />
-    </div>
+    </>
   );
 };
