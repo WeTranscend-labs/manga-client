@@ -4,6 +4,5 @@ export * from './gemini';
 export * from './gemini-prompt';
 export * from './id';
 export * from './prompt-utils';
-export * from './query-client';
 export * from './react-utils';
 export * from './utils';
