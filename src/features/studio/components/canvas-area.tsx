@@ -1,6 +1,6 @@
 'use client';
 
-import { Maximize2, Trash2 } from 'lucide-react';
+import { Icons } from '@/components/icons';
 import Image from 'next/image';
 
 import { GenerationProgress } from '@/components/ui/generation-progress';
@@ -77,7 +77,7 @@ export default function CanvasArea({
                 className="px-4 sm:px-5 py-2.5 sm:py-3 bg-gradient-to-b from-blue-400 to-blue-600 hover:from-blue-500 hover:to-blue-700 text-white rounded-xl font-bold text-xs sm:text-sm flex items-center gap-2 transition-all shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 hover:scale-105 active:scale-95 active:translate-y-0.5 ring-2 ring-transparent hover:ring-blue-500/30 touch-manipulation min-h-[44px]"
                 style={{ fontFamily: 'var(--font-inter)' }}
               >
-                <Maximize2 size={14} className="sm:w-3.5 sm:h-3.5" />
+                <Icons.Maximize2 size={14} className="sm:w-3.5 sm:h-3.5" />
                 <span className="hidden sm:inline">FULLSCREEN</span>
                 <span className="sm:hidden">VIEW</span>
               </button>
@@ -93,7 +93,7 @@ export default function CanvasArea({
                 onClick={onDiscardImage}
                 className="p-2.5 sm:p-3 bg-gradient-to-b from-red-500 to-red-700 hover:from-red-600 hover:to-red-800 text-white rounded-xl transition-all shadow-lg shadow-red-500/30 hover:shadow-xl hover:shadow-red-500/40 hover:scale-105 active:scale-95 active:translate-y-0.5 ring-2 ring-transparent hover:ring-red-500/30 touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center"
               >
-                <Trash2 size={14} className="sm:w-3.5 sm:h-3.5" />
+                <Icons.Trash2 size={14} className="sm:w-3.5 sm:h-3.5" />
               </button>
             </div>
           </div>

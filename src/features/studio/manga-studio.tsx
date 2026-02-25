@@ -1,5 +1,10 @@
 'use client';
 import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from '@/components/ui/resizable';
+import {
   AspectRatio,
   DialogueDensity,
   InkingStyle,
@@ -98,27 +103,50 @@ export const MangaStudio = () => {
 
   return (
     <>
-      <StudioLeftSidebar />
-      <StudioControls />
+      <div className="flex h-full w-full overflow-hidden bg-zinc-950">
+        <ResizablePanelGroup
+          direction="horizontal"
+          autoSaveId="studio-main-layout"
+        >
+          <ResizablePanel defaultSize={20} minSize={15} maxSize={30}>
+            <StudioLeftSidebar />
+          </ResizablePanel>
 
-      {/* Right Section - Canvas */}
-      <CanvasArea
-        loading={generationLoading}
-        generationProgress={generationProgress}
-        retryCount={retryCount}
-        currentImage={currentImage}
-        onShowFullscreen={() =>
-          setStudioState({
-            fullscreenPreview: {
-              open: true,
-              image: currentImage,
-              isFromCanvas: true,
-            },
-          })
-        }
-        onAddToProject={addToProject}
-        onDiscardImage={() => setStudioState({ currentImage: null })}
-      />
+          <ResizableHandle
+            withHandle
+            className="w-1.5 bg-zinc-800/30 hover:bg-amber-500/50 transition-all duration-200 relative group"
+          />
+
+          <ResizablePanel defaultSize={35} minSize={25} maxSize={50}>
+            <StudioControls />
+          </ResizablePanel>
+
+          <ResizableHandle
+            withHandle
+            className="w-1.5 bg-zinc-800/30 hover:bg-amber-500/50 transition-all duration-200 relative group"
+          />
+
+          <ResizablePanel defaultSize={45}>
+            <CanvasArea
+              loading={generationLoading}
+              generationProgress={generationProgress}
+              retryCount={retryCount}
+              currentImage={currentImage}
+              onShowFullscreen={() =>
+                setStudioState({
+                  fullscreenPreview: {
+                    open: true,
+                    image: currentImage,
+                    isFromCanvas: true,
+                  },
+                })
+              }
+              onAddToProject={addToProject}
+              onDiscardImage={() => setStudioState({ currentImage: null })}
+            />
+          </ResizablePanel>
+        </ResizablePanelGroup>
+      </div>
 
       {/* Chat History Overlay */}
       {showChat && currentSession && (

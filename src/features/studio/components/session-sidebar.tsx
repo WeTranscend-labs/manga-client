@@ -1,5 +1,6 @@
 'use client';
 
+import { Icons } from '@/components/icons';
 import {
   Select,
   SelectContent,
@@ -14,18 +15,6 @@ import {
   MangaSession,
   ReferenceImage,
 } from '@/types';
-import {
-  CheckSquare,
-  FileText,
-  Image as ImageIcon,
-  Layers,
-  Maximize2,
-  Plus,
-  Square,
-  Star,
-  Trash2,
-  X,
-} from 'lucide-react';
 import Image from 'next/image';
 import { useState } from 'react';
 
@@ -44,7 +33,6 @@ interface SessionSidebarProps {
   onOpenFullscreen: (imageUrl: string) => void;
   onConfigChange?: (config: MangaConfig) => void;
   onToggleReferencePage?: (pageId: string) => void; // New callback for toggling reference pages
-  leftWidth: number;
 }
 
 export default function SessionSidebar({
@@ -62,7 +50,6 @@ export default function SessionSidebar({
   onOpenFullscreen,
   onConfigChange,
   onToggleReferencePage,
-  leftWidth,
 }: SessionSidebarProps) {
   const [selectedPages, setSelectedPages] = useState<Set<string>>(new Set());
   const [showReferencePanel, setShowReferencePanel] = useState(false);
@@ -168,18 +155,25 @@ export default function SessionSidebar({
   };
 
   return (
-    <aside
-      className="border-r border-zinc-800 bg-zinc-900 flex flex-col transition-all"
-      style={{ width: `${leftWidth}px`, minWidth: '200px', maxWidth: '600px' }}
-    >
+    <aside className="border-r border-zinc-800 bg-zinc-900 flex flex-col h-full w-full">
       <div className="p-4 border-b border-zinc-800 pb-5">
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2 mb-1">
+          <Icons.Library size={16} className="text-amber-500" />
           <h2
-            className="text-xs font-bold text-zinc-400 uppercase tracking-wider"
+            className="text-sm font-bold text-zinc-200 uppercase tracking-wider"
             style={{ fontFamily: 'var(--font-inter)' }}
           >
-            Pages
+            Project History
           </h2>
+        </div>
+        <p className="text-[10px] text-zinc-500 mb-4 leading-relaxed">
+          Manage your manga pages and creation sessions here.
+        </p>
+
+        <div className="flex items-center justify-between mb-3 border-t border-zinc-800/50 pt-3">
+          <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-tighter">
+            Pages
+          </span>
           <span className="text-[10px] text-zinc-500">
             {pagesToShow.length} total
           </span>
@@ -198,9 +192,9 @@ export default function SessionSidebar({
               }
             >
               {selectedPages.size === pagesToShow.length ? (
-                <CheckSquare size={14} />
+                <Icons.CheckSquare size={14} />
               ) : (
-                <Square size={14} />
+                <Icons.Square size={14} />
               )}
               <span>
                 {selectedPages.size === pagesToShow.length
@@ -213,7 +207,7 @@ export default function SessionSidebar({
                 onClick={handleDeleteSelected}
                 className="flex items-center gap-1.5 px-2 py-1 bg-gradient-to-b from-red-500 to-red-700 hover:from-red-600 hover:to-red-800 text-white rounded text-[10px] font-bold transition-all shadow-[0_2px_0_0_rgb(153,27,27)] hover:shadow-[0_2px_0_0_rgb(153,27,27)] active:shadow-[0_0.5px_0_0_rgb(153,27,27)] active:translate-y-0.5"
               >
-                <Trash2 size={12} />
+                <Icons.Trash2 size={12} />
                 Delete ({selectedPages.size})
               </button>
             )}
@@ -248,7 +242,7 @@ export default function SessionSidebar({
                 className="px-3 py-2 bg-gradient-to-b from-red-500 to-red-700 hover:from-red-600 hover:to-red-800 text-white rounded-lg transition-all shadow-[0_2px_0_0_rgb(153,27,27)] hover:shadow-[0_2px_0_0_rgb(153,27,27)] active:shadow-[0_0.5px_0_0_rgb(153,27,27)] active:translate-y-0.5"
                 title="Delete Session"
               >
-                <Trash2 size={14} />
+                <Icons.Trash2 size={14} />
               </button>
             </div>
             <button
@@ -258,7 +252,7 @@ export default function SessionSidebar({
               className="w-full px-3 py-1.5 bg-gradient-to-b from-emerald-400 to-emerald-600 hover:from-emerald-500 hover:to-emerald-700 text-white rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-[0_2px_0_0_rgb(5,150,105)] hover:shadow-[0_2px_0_0_rgb(5,150,105)] active:shadow-[0_0.5px_0_0_rgb(5,150,105)] active:translate-y-0.5"
               style={{ fontFamily: 'var(--font-inter)' }}
             >
-              <Plus size={12} />
+              <Icons.Plus size={12} />
               NEW SESSION
             </button>
             {/* Reference Images Button */}
@@ -268,7 +262,7 @@ export default function SessionSidebar({
                 className="w-full px-3 py-1.5 bg-gradient-to-b from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-[0_2px_0_0_rgb(29,78,216)] hover:shadow-[0_2px_0_0_rgb(29,78,216)] active:shadow-[0_0.5px_0_0_rgb(29,78,216)] active:translate-y-0.5"
                 style={{ fontFamily: 'var(--font-inter)' }}
               >
-                <ImageIcon size={12} />
+                <Icons.Image size={12} />
                 REFERENCE ({enabledCount}/{referenceImages.length})
               </button>
             )}
@@ -301,7 +295,7 @@ export default function SessionSidebar({
               className="p-1 hover:bg-zinc-800 rounded transition-colors"
               title="Close"
             >
-              <X size={14} className="text-zinc-500" />
+              <Icons.X size={14} className="text-zinc-500" />
             </button>
           </div>
           <div className="grid grid-cols-2 gap-2">
@@ -355,7 +349,7 @@ export default function SessionSidebar({
                     className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                     title="Remove image"
                   >
-                    <X size={12} className="text-white" />
+                    <Icons.X size={12} className="text-white" />
                   </button>
                 </div>
               );
@@ -368,7 +362,7 @@ export default function SessionSidebar({
       <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
         {pagesToShow.length === 0 ? (
           <div className="text-center py-20 opacity-20">
-            <Layers size={40} className="mx-auto mb-3 text-zinc-600" />
+            <Icons.Layers size={40} className="mx-auto mb-3 text-zinc-600" />
             <p className="text-xs text-zinc-500">No pages yet</p>
           </div>
         ) : (
@@ -408,9 +402,9 @@ export default function SessionSidebar({
                     title={isSelected ? 'Deselect' : 'Select'}
                   >
                     {isSelected ? (
-                      <CheckSquare size={14} className="text-amber-500" />
+                      <Icons.CheckSquare size={14} className="text-amber-500" />
                     ) : (
-                      <Square size={14} className="text-zinc-400" />
+                      <Icons.Square size={14} className="text-zinc-400" />
                     )}
                   </button>
                   <div className="px-2 py-1 bg-black/80 backdrop-blur-sm rounded text-[10px] font-bold text-amber-500">
@@ -434,7 +428,7 @@ export default function SessionSidebar({
                           : 'Set as reference (used for continuation)'
                       }
                     >
-                      <Star
+                      <Icons.Star
                         size={14}
                         className={
                           isReferencePage(page.id) ? 'fill-current' : ''
@@ -446,7 +440,7 @@ export default function SessionSidebar({
                 {/* Reference Badge */}
                 {isReferencePage(page.id) && (
                   <div className="absolute top-2 right-2 px-2 py-1 bg-gradient-to-br from-amber-500/90 to-amber-600/90 backdrop-blur-sm rounded text-[10px] font-bold text-black flex items-center gap-1 shadow-lg">
-                    <Star size={10} className="fill-current" />
+                    <Icons.Star size={10} className="fill-current" />
                     REF
                   </div>
                 )}
@@ -462,7 +456,7 @@ export default function SessionSidebar({
                       className="p-1.5 bg-gradient-to-b from-blue-500 to-blue-700 rounded text-white transition-all shadow-[0_2px_0_0_rgb(29,78,216)] active:translate-y-0.5"
                       title="View Fullscreen"
                     >
-                      <Maximize2 size={12} />
+                      <Icons.Maximize2 size={12} />
                     </button>
                     <button
                       onClick={() => onToggleMarkForExport(page.id)}
@@ -473,7 +467,7 @@ export default function SessionSidebar({
                           : 'Mark for PDF'
                       }
                     >
-                      <FileText size={12} className="mx-auto" />
+                      <Icons.FileText size={12} className="mx-auto" />
                     </button>
                     <button
                       onClick={() => onMovePage(page.id, 'up')}
@@ -491,7 +485,7 @@ export default function SessionSidebar({
                       onClick={() => onDeletePage(page.id)}
                       className="p-1.5 bg-gradient-to-b from-red-500 to-red-700 rounded text-white transition-all shadow-[0_2px_0_0_rgb(153,27,27)] active:translate-y-0.5"
                     >
-                      <Trash2 size={12} />
+                      <Icons.Trash2 size={12} />
                     </button>
                   </div>
                 </div>

@@ -1,5 +1,6 @@
 'use client';
 
+import { Icons } from '@/components/icons';
 import {
   Select,
   SelectContent,
@@ -20,7 +21,6 @@ import {
   ReferenceImage,
   ScreentoneDensity,
 } from '@/types';
-import { Image as ImageIcon, Upload, X } from 'lucide-react';
 import Image from 'next/image';
 import { useRef, useState } from 'react';
 
@@ -134,7 +134,7 @@ export default function StorySettingsPanel({
   };
 
   return (
-    <div className="h-full bg-zinc-900 overflow-y-auto custom-scrollbar">
+    <div className="flex-1 h-full min-h-0 flex flex-col bg-zinc-900 overflow-y-auto custom-scrollbar">
       {/* Step 1: Story Settings */}
       <div className="border-b border-zinc-800">
         <div className="p-4 pb-3 bg-zinc-950/30">
@@ -172,7 +172,7 @@ export default function StorySettingsPanel({
                   }
                 }}
                 placeholder="Describe your characters in detail:&#10;&#10;Main character: Male, 17yo, spiky black hair, blue eyes, wearing red jacket with white shirt...&#10;&#10;Setting: Modern Tokyo, high school..."
-                className="w-full h-32 bg-zinc-950 border border-zinc-800 rounded-lg p-3 text-sm leading-relaxed text-zinc-300 placeholder:text-zinc-600 placeholder:text-[11px] placeholder:leading-relaxed focus:outline-none focus:border-amber-500 transition-colors resize-none custom-scrollbar"
+                className="w-full h-32 bg-zinc-950 border border-zinc-800 rounded-lg p-3 text-sm leading-relaxed text-zinc-300 placeholder:text-zinc-600 placeholder:text-[11px] placeholder:leading-relaxed focus:outline-none focus:border-amber-500 transition-colors resize-none custom-scrollbar min-h-[80px]"
                 style={{ fontFamily: 'var(--font-inter)' }}
                 maxLength={10000}
               />
@@ -184,7 +184,7 @@ export default function StorySettingsPanel({
                 className="text-xs font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-2"
                 style={{ fontFamily: 'var(--font-inter)' }}
               >
-                <ImageIcon size={14} />
+                <Icons.Image size={14} />
                 <span>Reference Images</span>
                 <span className="text-[9px] text-zinc-500 font-normal normal-case">
                   (Optional: Character/Style references)
@@ -205,7 +205,7 @@ export default function StorySettingsPanel({
                 disabled={uploading}
                 className="w-full p-3 bg-zinc-950 border border-zinc-800 rounded-lg hover:border-amber-500 transition-colors flex items-center justify-center gap-2 text-zinc-400 hover:text-amber-500 text-sm"
               >
-                <Upload size={16} />
+                <Icons.Upload size={16} />
                 {uploading ? 'Uploading...' : 'Upload Reference Images'}
               </button>
 
@@ -273,7 +273,7 @@ export default function StorySettingsPanel({
                             className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                             title="Remove image"
                           >
-                            <X size={12} className="text-white" />
+                            <Icons.X size={12} className="text-white" />
                           </button>
                         </div>
                       );

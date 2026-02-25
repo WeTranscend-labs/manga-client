@@ -28,10 +28,6 @@ interface StudioUIState {
     isFromCanvas: boolean;
   };
 
-  // Layout Dimensions (Transient UI state)
-  leftWidth: number;
-  middleWidth: number;
-
   // Actions
   setStudioState: (state: Partial<Omit<StudioUIState, 'actions'>>) => void;
   setDeleteConfirmation: (state: Partial<DeleteConfirmationState>) => void;
@@ -60,8 +56,6 @@ const initialState = {
     image: null,
     isFromCanvas: false,
   },
-  leftWidth: 320,
-  middleWidth: 640,
 };
 
 export const useStudioUIStore = create<StudioUIState>()(
