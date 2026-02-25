@@ -14,7 +14,8 @@ interface StudioUIState {
   showChat: boolean;
   showMobileSidebar: boolean;
   showMobileSettings: boolean; // Added this one too
-  activeMobileTab: 'sessions' | 'settings' | 'prompt';
+  showTabletSidebar: boolean;
+  activeMobileTab: 'sessions' | 'settings' | 'prompt' | 'chat';
   prompt: string;
   currentImage: string | null;
   generationProgress: number;
@@ -42,6 +43,7 @@ const initialState = {
   showChat: false,
   showMobileSidebar: false,
   showMobileSettings: false,
+  showTabletSidebar: false,
   activeMobileTab: 'sessions' as const,
   prompt: '',
   currentImage: null,
@@ -77,6 +79,9 @@ export const useStudioUIStore = create<StudioUIState>()(
 
       toggleMobileSidebar: () =>
         set((state) => ({ showMobileSidebar: !state.showMobileSidebar })),
+
+      toggleTabletSidebar: () =>
+        set((state) => ({ showTabletSidebar: !state.showTabletSidebar })),
 
       reset: () => set(initialState),
     }),

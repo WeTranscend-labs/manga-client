@@ -38,8 +38,6 @@ export const StudioLeftSidebar = () => {
     [currentSession, currentProject?.pages],
   );
 
-  if (isMobile) return null;
-
   return (
     <aside className="h-full w-full bg-zinc-900 border-r border-zinc-800 flex flex-col">
       {!currentProject ? (

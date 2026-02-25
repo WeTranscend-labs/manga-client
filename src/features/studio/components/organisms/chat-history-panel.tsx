@@ -1,5 +1,6 @@
 'use client';
 
+import { IconButton } from '@/components/ui/icon-button';
 import { MangaSession } from '@/types';
 import { X } from 'lucide-react';
 import Image from 'next/image';
@@ -26,12 +27,9 @@ export default function ChatHistoryPanel({
         >
           Chat History
         </h3>
-        <button
-          onClick={onClose}
-          className="p-1 hover:bg-zinc-800 rounded transition-colors"
-        >
+        <IconButton onClick={onClose} size="icon-xs" title="Close">
           <X size={16} className="text-zinc-500" />
-        </button>
+        </IconButton>
       </div>
       <div className="p-4 overflow-y-auto max-h-[540px] custom-scrollbar space-y-3">
         {currentSession.chatHistory.map((msg) => (

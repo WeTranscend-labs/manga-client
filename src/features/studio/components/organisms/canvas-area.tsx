@@ -1,9 +1,10 @@
 'use client';
 
 import { Icons } from '@/components/icons';
-import Image from 'next/image';
-
+import { Button } from '@/components/ui/button';
 import { GenerationProgress } from '@/components/ui/generation-progress';
+import { IconButton } from '@/components/ui/icon-button';
+import Image from 'next/image';
 
 interface CanvasAreaProps {
   loading: boolean;
@@ -29,8 +30,8 @@ export default function CanvasArea({
       {loading && (
         <div className="flex flex-col items-center gap-5 sm:gap-6 w-full max-w-md px-4">
           <div className="w-48 h-64 sm:w-64 sm:h-80 bg-zinc-900/60 rounded-2xl shadow-2xl shadow-black/50 relative overflow-hidden border border-zinc-800/50 backdrop-blur-sm">
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-shimmer"></div>
-            <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 via-transparent to-transparent"></div>
+            <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/5 to-transparent animate-shimmer"></div>
+            <div className="absolute inset-0 bg-linear-to-br from-amber-500/5 via-transparent to-transparent"></div>
           </div>
           <div className="text-amber-400 font-manga text-base sm:text-xl tracking-wider animate-pulse drop-shadow-[0_0_8px_rgba(251,191,36,0.4)]">
             GENERATING...
@@ -72,29 +73,35 @@ export default function CanvasArea({
             />
             {/* Floating Action Buttons - Always visible on mobile, hover on desktop */}
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 sm:gap-3 flex-wrap justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity z-10">
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={onShowFullscreen}
-                className="px-4 sm:px-5 py-2.5 sm:py-3 bg-gradient-to-b from-blue-400 to-blue-600 hover:from-blue-500 hover:to-blue-700 text-white rounded-xl font-bold text-xs sm:text-sm flex items-center gap-2 transition-all shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 hover:scale-105 active:scale-95 active:translate-y-0.5 ring-2 ring-transparent hover:ring-blue-500/30 touch-manipulation min-h-[44px]"
+                className="min-h-[44px] px-4 sm:px-5 bg-linear-to-b from-blue-400 to-blue-600 hover:from-blue-500 hover:to-blue-700 text-white rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 hover:scale-105 active:scale-95 active:translate-y-0.5 ring-2 ring-transparent hover:ring-blue-500/30 touch-manipulation"
                 style={{ fontFamily: 'var(--font-inter)' }}
               >
                 <Icons.Maximize2 size={14} className="sm:w-3.5 sm:h-3.5" />
                 <span className="hidden sm:inline">FULLSCREEN</span>
                 <span className="sm:hidden">VIEW</span>
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => onAddToProject(true)}
-                className="px-4 sm:px-5 py-2.5 sm:py-3 bg-gradient-to-b from-emerald-400 to-emerald-600 hover:from-emerald-500 hover:to-emerald-700 text-white rounded-xl font-bold text-xs sm:text-sm flex items-center gap-2 transition-all shadow-lg shadow-emerald-500/30 hover:shadow-xl hover:shadow-emerald-500/40 hover:scale-105 active:scale-95 active:translate-y-0.5 ring-2 ring-transparent hover:ring-emerald-500/30 touch-manipulation min-h-[44px]"
+                className="min-h-[44px] px-4 sm:px-5 bg-linear-to-b from-emerald-400 to-emerald-600 hover:from-emerald-500 hover:to-emerald-700 text-white rounded-xl shadow-lg shadow-emerald-500/30 hover:shadow-xl hover:shadow-emerald-500/40 hover:scale-105 active:scale-95 active:translate-y-0.5 ring-2 ring-transparent hover:ring-emerald-500/30 touch-manipulation"
                 style={{ fontFamily: 'var(--font-inter)' }}
               >
                 <span className="hidden sm:inline">✓ ADD TO PDF</span>
                 <span className="sm:hidden">✓ ADD</span>
-              </button>
-              <button
+              </Button>
+              <IconButton
                 onClick={onDiscardImage}
-                className="p-2.5 sm:p-3 bg-gradient-to-b from-red-500 to-red-700 hover:from-red-600 hover:to-red-800 text-white rounded-xl transition-all shadow-lg shadow-red-500/30 hover:shadow-xl hover:shadow-red-500/40 hover:scale-105 active:scale-95 active:translate-y-0.5 ring-2 ring-transparent hover:ring-red-500/30 touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center"
+                className="min-h-[44px] min-w-[44px] rounded-xl bg-linear-to-b from-red-500 to-red-700 hover:from-red-600 hover:to-red-800 text-white shadow-lg shadow-red-500/30 hover:shadow-xl hover:shadow-red-500/40 hover:scale-105 active:scale-95 active:translate-y-0.5 ring-2 ring-transparent hover:ring-red-500/30 touch-manipulation"
+                size="icon-sm"
+                title="Discard"
               >
                 <Icons.Trash2 size={14} className="sm:w-3.5 sm:h-3.5" />
-              </button>
+              </IconButton>
             </div>
           </div>
         </div>

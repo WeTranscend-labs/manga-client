@@ -9,13 +9,13 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { DEFAULT_MANGA_CONFIG } from '@/constants/manga-defaults';
-import FullscreenModal from '@/features/studio/components/fullscreen-modal';
 import { useProjectsStore } from '@/stores/projects.store';
 import { useStudioUIStore } from '@/stores/studio-ui.store';
 import { GeneratedManga } from '@/types';
 import { generateId } from '@/utils/react-utils';
 import { toast } from 'sonner';
 import { useShallow } from 'zustand/react/shallow';
+import FullscreenModal from './fullscreen-modal';
 
 export const StudioDialogs = () => {
   const deleteSession = useProjectsStore((state) => state.deleteSession);

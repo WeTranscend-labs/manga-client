@@ -271,10 +271,6 @@ export const useProjectsStore = create<ProjectsState>()(
                 : null,
             }));
 
-            // Debounced save could happen here or in a subscriber,
-            // but for now keeping it simple or relying on explicit save if needed.
-            // Replicating useStudioState debounce logic might be better in the component invoking this,
-            // or using a debounced version of this action.
             if (currentProject?.id) {
               storageService
                 .saveSession(currentProject.id, updatedSession)

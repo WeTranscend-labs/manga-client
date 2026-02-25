@@ -97,22 +97,14 @@ export function Header() {
               </button>
             </div>
 
-            <Button
-              asChild
-              variant="ghost"
-              size="sm"
-              className="hidden sm:inline-flex text-zinc-400 hover:text-white hover:bg-zinc-800"
-            >
-              <Link href={Route.STUDIO}>Studio</Link>
-            </Button>
             <AnimatedShinyButton
-              url={Route.COMMUNITY}
-              className="hidden sm:inline-flex text-xs h-9 px-4 [--shiny-cta-highlight:#38bdf8] [--shiny-cta-highlight-subtle:#0ea5e9]"
+              url={Route.STUDIO}
+              className="hidden sm:inline-flex text-xs h-9 px-4 [--shiny-cta-highlight:#f59e0b] [--shiny-cta-highlight-subtle:#d97706]"
             >
               <span
                 style={{ fontFamily: 'var(--font-inter)', fontWeight: 600 }}
               >
-                Community
+                Studio
               </span>
             </AnimatedShinyButton>
             <DropdownMenu>

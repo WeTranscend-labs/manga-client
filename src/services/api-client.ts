@@ -1,4 +1,3 @@
-import { Route } from '@/constants/routes';
 import { BACKEND_BASE_URL } from '@/constants/server';
 import { authEventBus } from '@/lib/auth-events';
 import axios, {
@@ -114,30 +113,6 @@ export class ApiClient {
 
         if (!originalRequest.disableToast) {
           toast.error(message);
-        }
-
-        // Check if this is a critical error that has exhausted retries
-        // If we reach here, it means retries have failed or it's a non-retriable error
-        const isCriticalError =
-          !error.response || // Network error
-          error.response.status >= 500; // Server error
-
-        // If it's a critical error and we're in the browser, redirect to error page
-        // We check !originalRequest._retry to avoid redirecting on the first failure of a sequence (though interceptor runs last)
-        // Actually, internal retry logic of axios-retry handles the looping.
-        // If we are here, it means axios-retry gave up or didn't retry.
-        if (
-          isCriticalError &&
-          typeof window !== 'undefined' &&
-          !originalRequest.url?.includes(Route.ERROR) // Avoid redirect loop if error page itself fails
-        ) {
-          console.error(
-            '[ApiClient] Critical error detected after retries, redirecting to error page',
-          );
-          window.location.href = Route.ERROR;
-          return Promise.reject(
-            new Error('Redirecting to error page due to critical error'),
-          );
         }
 
         return Promise.reject(new Error(message));

@@ -18,16 +18,22 @@ const buttonVariants = cva(
         secondary:
           'bg-zinc-800 text-zinc-100 border-2 border-zinc-700 hover:bg-zinc-700',
         ghost: 'text-zinc-400 hover:text-white hover:bg-zinc-800/50',
+        'icon-ghost':
+          'text-zinc-300 hover:text-amber-400 hover:bg-zinc-800/60 active:bg-zinc-800 transition-all group touch-manipulation',
         link: 'text-amber-500 underline-offset-4 hover:underline',
         manga:
           'font-manga text-lg bg-white text-black border-2 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[4px] hover:translate-y-[4px] px-8 py-3 h-auto uppercase tracking-wider',
+        'primary-3d':
+          'bg-linear-to-b from-amber-400 to-amber-600 hover:from-amber-500 hover:to-amber-700 text-black font-bold shadow-[0_3px_0_0_rgb(180,83,9)] hover:shadow-[0_3px_0_0_rgb(180,83,9)] active:shadow-[0_1px_0_0_rgb(180,83,9)] active:translate-y-0.5 hover:scale-105 touch-manipulation',
       },
       size: {
         default: 'h-11 px-6',
+        xs: 'h-7 px-2.5 text-[10px]',
         sm: 'h-9 px-4 text-xs',
         lg: 'h-14 px-8 text-base',
         icon: 'size-11',
         'icon-sm': 'size-9',
+        'icon-xs': 'size-8 p-2',
         'icon-lg': 'size-14',
       },
     },

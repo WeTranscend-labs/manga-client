@@ -1,4 +1,7 @@
 import { Icons } from '@/components/icons';
+import { Button } from '@/components/ui/button';
+import { IconButton } from '@/components/ui/icon-button';
+import { PreviewButton } from '@/components/ui/preview-button';
 import { Route } from '@/constants';
 import { authStore } from '@/stores/auth.store';
 import { useProjectsStore } from '@/stores/projects.store';
@@ -19,16 +22,8 @@ export const StudioHeader = () => {
   const currentSession = useProjectsStore((state) => state.currentSession);
   const isMobile = useUIStore((state) => state.isMobile);
 
-  const {
-    showMobileSettings,
-    toggleMobileSidebar,
-    toggleChat,
-    toggleSettings,
-    setStudioState,
-  } = useStudioUIStore(
+  const { toggleChat, toggleSettings, setStudioState } = useStudioUIStore(
     useShallow((state) => ({
-      showMobileSettings: state.showMobileSettings,
-      toggleMobileSidebar: state.toggleMobileSidebar,
       toggleChat: state.toggleChat,
       toggleSettings: state.toggleSettings,
       setStudioState: state.setStudioState,
@@ -86,41 +81,21 @@ export const StudioHeader = () => {
       </div>
 
       <div className="flex items-center gap-1.5 sm:gap-2 lg:gap-3 shrink-0">
-        {isMobile && (
-          <>
-            <button
-              onClick={() => {
-                toggleMobileSidebar();
-                setStudioState({ showMobileSettings: false });
-              }}
-              className="p-2.5 rounded-lg hover:bg-zinc-800/60 active:bg-zinc-800 transition-all active:scale-95 touch-manipulation"
-              title="Sessions"
-            >
-              <Icons.Layers size={20} className="text-zinc-300" />
-            </button>
-            <button
-              onClick={() => {
-                setStudioState({
-                  showMobileSettings: !showMobileSettings,
-                  showMobileSidebar: false,
-                });
-              }}
-              className="p-2.5 rounded-lg hover:bg-zinc-800/60 active:bg-zinc-800 transition-all active:scale-95 touch-manipulation"
-              title="Generate"
-            >
-              <Icons.Settings size={20} className="text-zinc-300" />
-            </button>
-          </>
-        )}
-        <button
-          onClick={toggleChat}
-          className="p-2 sm:p-2.5 rounded-lg hover:bg-zinc-800/60 active:bg-zinc-800 transition-all relative group touch-manipulation"
-          title="Chat History"
+        {/* Tablet-only: Sessions drawer trigger (shown md to lg) */}
+        <IconButton
+          onClick={() => setStudioState({ showTabletSidebar: true })}
+          title="Sessions"
+          className="hidden md:flex lg:hidden"
         >
-          <Icons.MessageSquare
-            size={18}
-            className="sm:w-5 sm:h-5 text-zinc-300 group-hover:text-amber-400 transition-colors"
-          />
+          <Icons.Layers size={20} />
+        </IconButton>
+
+        <IconButton
+          onClick={toggleChat}
+          title="Chat History"
+          className="relative hidden md:flex"
+        >
+          <Icons.MessageSquare size={18} className="sm:w-5 sm:h-5" />
           {currentSession &&
             currentSession.chatHistory &&
             currentSession.chatHistory.length > 0 && (
@@ -128,54 +103,49 @@ export const StudioHeader = () => {
                 {currentSession.chatHistory.length}
               </span>
             )}
-        </button>
+        </IconButton>
+
+        {/* Settings (desktop only) */}
         {!isMobile && (
-          <button
-            onClick={toggleSettings}
-            className="p-2 rounded-lg hover:bg-zinc-800/60 transition-all group"
-            title="Settings"
-          >
-            <Icons.Settings
-              size={20}
-              className="text-zinc-400 group-hover:text-amber-400 transition-colors"
-            />
-          </button>
+          <IconButton onClick={toggleSettings} title="Settings">
+            <Icons.Settings size={20} />
+          </IconButton>
         )}
+
         <div className="h-6 sm:h-8 w-px bg-zinc-800/50 mx-1 sm:mx-2" />
-        <button
+
+        {/* Preview — hidden on mobile (lives in bottom nav) */}
+        <PreviewButton
           onClick={() => router.push(Route.STUDIO_PREVIEW)}
-          className="px-2.5 sm:px-4 lg:px-5 py-1.5 sm:py-2 bg-linear-to-b from-amber-400 to-amber-600 hover:from-amber-500 hover:to-amber-700 text-black rounded-lg font-bold text-[10px] sm:text-xs lg:text-sm flex items-center gap-1 sm:gap-1.5 lg:gap-2 transition-all shadow-[0_3px_0_0_rgb(180,83,9)] hover:shadow-[0_3px_0_0_rgb(180,83,9)] active:shadow-[0_1px_0_0_rgb(180,83,9)] active:translate-y-0.5 hover:scale-105 touch-manipulation"
+          count={exportCount}
+          icon={
+            <Icons.Eye size={12} className="sm:w-3.5 sm:h-3.5 lg:w-4 lg:h-4" />
+          }
+          className="hidden md:flex"
+        />
+
+        {/* Download PDF (desktop only) */}
+        <Button
+          variant="secondary"
+          size="sm"
+          className="hidden sm:flex gap-1.5 text-xs lg:text-sm"
           style={{ fontFamily: 'var(--font-inter)' }}
-        >
-          <Icons.Eye size={12} className="sm:w-3.5 sm:h-3.5 lg:w-4 lg:h-4" />
-          <span className="hidden sm:inline">PREVIEW</span>
-          <span className="sm:hidden font-bold">({exportCount})</span>
-          {exportCount > 0 && (
-            <span className="hidden sm:inline text-[10px] lg:text-xs ml-0.5">
-              ({exportCount})
-            </span>
-          )}
-        </button>
-        <button
           onClick={() =>
             router.push(formatUrl(Route.STUDIO_PREVIEW, { autoDownload: 1 }))
           }
-          className="hidden sm:flex px-3 lg:px-4 py-1.5 bg-zinc-900 border border-zinc-700 text-zinc-100 rounded-lg text-xs lg:text-sm font-semibold items-center gap-1.5 hover:bg-zinc-800 hover:border-zinc-500 transition-all"
-          style={{ fontFamily: 'var(--font-inter)' }}
         >
           <Icons.Download size={14} className="lg:w-4 lg:h-4" />
           <span>Download PDF</span>
-        </button>
-        <button
+        </Button>
+
+        {/* Sign Out */}
+        <IconButton
           onClick={handleLogout}
-          className="p-2 sm:p-2.5 rounded-lg hover:bg-zinc-800/60 active:bg-zinc-800 transition-all group touch-manipulation"
           title="Sign Out"
+          className="hover:text-red-400"
         >
-          <Icons.LogOut
-            size={18}
-            className="sm:w-5 sm:h-5 text-zinc-300 group-hover:text-red-400 transition-colors"
-          />
-        </button>
+          <Icons.LogOut size={18} className="sm:w-5 sm:h-5" />
+        </IconButton>
       </div>
     </header>
   );

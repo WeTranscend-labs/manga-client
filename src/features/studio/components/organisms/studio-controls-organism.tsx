@@ -1,6 +1,5 @@
 'use client';
 
-import StorySettingsPanel from '@/components/story-settings-panel';
 import {
   ResizableHandle,
   ResizablePanel,
@@ -12,6 +11,7 @@ import { useStudioUIStore } from '@/stores/studio-ui.store';
 import { MangaConfig } from '@/types';
 import { useShallow } from 'zustand/react/shallow';
 import PromptPanel from './prompt-panel';
+import StorySettingsPanel from './story-settings-panel';
 
 export const StudioControls = () => {
   // Global State
@@ -55,14 +55,13 @@ export const StudioControls = () => {
     setProject: () => {},
     currentSession,
     setCurrentSession,
-    setCurrentImage: (url: string) => setStudioState({ currentImage: url }),
+    setCurrentImage: (url: string | null) =>
+      setStudioState({ currentImage: url }),
     setLoading,
     setError,
     setRetryCount: () => {},
     retryCount: 0,
   });
-
-  if (isMobile) return null;
 
   return (
     <aside className="border-r border-zinc-800/40 bg-zinc-900/40 backdrop-blur-xl flex flex-col h-full w-full shadow-2xl relative overflow-hidden">
@@ -75,9 +74,9 @@ export const StudioControls = () => {
         <ResizablePanel
           defaultSize={45}
           minSize={20}
-          className="relative min-h-0"
+          className="min-h-0 overflow-hidden"
         >
-          <div className="absolute inset-0 flex flex-col overflow-hidden">
+          <div className="h-full overflow-hidden flex flex-col">
             <StorySettingsPanel
               context={currentSession?.context || ''}
               config={(currentSession?.config || {}) as MangaConfig}
@@ -89,7 +88,7 @@ export const StudioControls = () => {
 
         <ResizableHandle
           withHandle
-          className="h-1.5 bg-zinc-800/20 hover:bg-amber-500/30 transition-all duration-300 relative z-40 group shrink-0"
+          className="h-1.5 bg-zinc-800/20 hover:bg-amber-500/30 transition-all duration-300 relative group shrink-0"
         >
           <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-px bg-zinc-800 group-hover:bg-amber-500/40" />
         </ResizableHandle>
@@ -98,9 +97,9 @@ export const StudioControls = () => {
         <ResizablePanel
           defaultSize={55}
           minSize={25}
-          className="relative min-h-0"
+          className="min-h-0 overflow-hidden"
         >
-          <div className="absolute inset-0 flex flex-col overflow-hidden">
+          <div className="h-full overflow-hidden flex flex-col">
             <PromptPanel
               prompt={prompt}
               currentSession={currentSession}

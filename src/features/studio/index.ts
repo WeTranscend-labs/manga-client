@@ -1,1 +1,1 @@
-export { MangaStudio } from './manga-studio';
+export { MangaStudio } from './components/templates/manga-studio-template';

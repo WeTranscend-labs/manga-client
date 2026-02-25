@@ -11,6 +11,9 @@ import { MangaConfig, MangaSession } from '@/types';
 import { cleanUserPrompt } from '@/utils/prompt-utils';
 import { useState } from 'react';
 
+import { StudioTextArea } from '../atoms/studio-text-area';
+import { StudioSectionHeader } from '../molecules/studio-section-header';
+
 interface PromptPanelProps {
   prompt: string;
   currentSession: MangaSession | null;
@@ -54,39 +57,36 @@ export default function PromptPanel({
     }, 100);
   };
 
+  const headerBadge = (
+    <>
+      {currentSession && currentSession.pages.length > 0 && (
+        <span className="text-[9px] text-zinc-500 font-normal normal-case">
+          (Page {currentSession.pages.length + 1})
+        </span>
+      )}
+      {isAutoContinue && (
+        <span className="text-[9px] text-amber-400/80 font-normal normal-case flex items-center gap-1 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
+          <Icons.Wand2 size={10} />
+          Auto-Continue ON
+        </span>
+      )}
+    </>
+  );
+
   return (
     <div className="flex-1 h-full min-h-0 flex flex-col bg-transparent overflow-hidden">
       {/* 1. Scrollable Content Area: Header + Textarea + Progress */}
       <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-4 sm:p-5 flex flex-col gap-4">
         {/* Step 3 Header */}
-        <div className="flex items-center gap-3 pb-1 shrink-0">
-          <div className="w-8 h-8 rounded-full bg-linear-to-br from-amber-400 to-amber-600 text-black font-bold text-sm flex items-center justify-center shrink-0 shadow-lg shadow-amber-500/30 ring-2 ring-amber-500/20">
-            3
-          </div>
-          <div className="flex-1">
-            <label
-              className="text-sm font-bold text-zinc-200 uppercase tracking-wider flex items-center gap-2"
-              style={{ fontFamily: 'var(--font-inter)' }}
-            >
-              <span>Write Your Prompt</span>
-              {currentSession && currentSession.pages.length > 0 && (
-                <span className="text-[9px] text-zinc-500 font-normal normal-case">
-                  (Page {currentSession.pages.length + 1})
-                </span>
-              )}
-              {isAutoContinue && (
-                <span className="text-[9px] text-amber-400/80 font-normal normal-case flex items-center gap-1 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
-                  <Icons.Wand2 size={10} />
-                  Auto-Continue ON
-                </span>
-              )}
-            </label>
-          </div>
-        </div>
+        <StudioSectionHeader
+          step={3}
+          label="Write Your Prompt"
+          badge={headerBadge}
+        />
 
         {/* Prompt Textarea Container */}
         <div className="flex-1 min-h-0 flex flex-col">
-          <textarea
+          <StudioTextArea
             value={prompt}
             onChange={(e) => {
               const value = e.target.value;
@@ -122,8 +122,6 @@ export default function PromptPanel({
                   ? 'Continue the story with the SAME characters from Context...'
                   : 'Describe the scene: A hero standing on a rooftop, looking at the sunset...'
             }
-            className="w-full flex-1 h-full min-h-0 bg-zinc-950/60 border border-zinc-800/60 rounded-xl p-3 sm:p-4 text-sm sm:text-base leading-relaxed text-zinc-200 placeholder:text-zinc-600 placeholder:text-xs sm:placeholder:text-sm focus:outline-none focus:border-amber-500/60 focus:ring-2 focus:ring-amber-500/20 transition-all resize-none custom-scrollbar backdrop-blur-sm shadow-inner"
-            style={{ fontFamily: 'var(--font-inter)' }}
             disabled={batchLoading}
             onKeyDown={(e) => {
               if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
