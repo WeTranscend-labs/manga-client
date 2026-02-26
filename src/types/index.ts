@@ -75,7 +75,7 @@ export enum Language {
 
 export enum PanelBorderStyle {
   FULL_BORDER = 'Full Border',
-  NO_BORDER = 'No Border', // Full ảnh không viền trắng
+  NO_BORDER = 'No Border', // Full image without white border
 }
 
 export interface ReferenceImage {

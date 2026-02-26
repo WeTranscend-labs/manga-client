@@ -248,8 +248,8 @@ export default function StorySettingsPanel({
           label="Panel Border"
           hint={
             config.panelBorderStyle === PanelBorderStyle.FULL_BORDER
-              ? 'Có viền đen'
-              : 'Full ảnh không viền trắng'
+              ? 'Black borders'
+              : 'Full image (no white border)'
           }
           checked={config.panelBorderStyle === PanelBorderStyle.FULL_BORDER}
           onCheckedChange={(checked) =>
@@ -339,7 +339,7 @@ export default function StorySettingsPanel({
         <div className="space-y-2 pt-2 border-t border-zinc-800">
           <ConfigSwitchField
             label="Auto-Continue Story"
-            hint="AI tự động tiếp tục câu chuyện từ page trước"
+            hint="AI continues the story from the previous page"
             checked={!!config.autoContinueStory}
             onCheckedChange={(checked) =>
               onConfigChange({ ...config, autoContinueStory: checked })
@@ -351,7 +351,7 @@ export default function StorySettingsPanel({
               onChange={(e) =>
                 onConfigChange({ ...config, storyDirection: e.target.value })
               }
-              placeholder="Mô tả hướng phát triển của câu chuyện..."
+              placeholder="Describe the direction of the story..."
               className="w-full h-40 bg-zinc-950 border border-zinc-800 rounded-lg p-3 text-sm text-zinc-300 resize-y custom-scrollbar"
               style={{ fontFamily: 'var(--font-inter)', minHeight: '120px' }}
             />

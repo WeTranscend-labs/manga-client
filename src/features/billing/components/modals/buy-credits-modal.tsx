@@ -8,7 +8,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { DialogProps } from '@/components/ui/modal';
-import { depositService } from '@/services/deposit.service';
+import { BILLING_CONTRACT_ADDRESS, BILLING_NETWORK_ID } from '@/constants/env';
+import { billingService } from '@/services/billing.service';
 import { useAuthStore } from '@/stores/auth.store';
 import { useWallets } from '@privy-io/react-auth';
 import { ethers } from 'ethers';
@@ -22,7 +23,9 @@ const CREDIT_PLANS = [
   { credits: 2000, price: 1.5, label: 'Pro', popular: false },
 ];
 
-const POLKADOT_TESTNET_ID = 1002;
+const POLKADOT_TESTNET_ID = BILLING_NETWORK_ID
+  ? Number(BILLING_NETWORK_ID)
+  : 1002;
 
 export function BuyCreditsModal({ isOpen, onDismiss }: DialogProps) {
   const { wallets } = useWallets();
@@ -36,7 +39,7 @@ export function BuyCreditsModal({ isOpen, onDismiss }: DialogProps) {
 
   const handlePurchase = async (plan: (typeof CREDIT_PLANS)[0]) => {
     if (!wallets.length) {
-      toast.error('Vui lòng kết nối ví trước');
+      toast.error('Please connect your wallet first');
       return;
     }
 
@@ -49,48 +52,49 @@ export function BuyCreditsModal({ isOpen, onDismiss }: DialogProps) {
 
       // 1. Ensure correct network
       if (wallet.chainId !== `eip155:${POLKADOT_TESTNET_ID}`) {
-        toast.info('Đang chuyển sang mạng Polkadot TestNet...');
+        toast.info('Switching to Polkadot TestNet...');
         await wallet.switchChain(POLKADOT_TESTNET_ID);
       }
 
-      // 2. Create deposit session
-      const { depositId } = await depositService.createDeposit(plan.credits);
+      // 2. Create top-up session
+      const { top_up_id: depositId } = await billingService.initiateTopUp(
+        plan.credits,
+      );
 
       // 3. Initiate Transaction
-      const provider = await wallet.getEthersProvider();
+      const ethereumProvider = await wallet.getEthereumProvider();
+      const provider = new ethers.BrowserProvider(ethereumProvider);
       const signer = await provider.getSigner();
 
-      // For testnet, we might be sending to a fixed address or a vault
-      // This address should ideally come from the backend in createDeposit
-      const recipientAddress = '0x0000000000000000000000000000000000000000'; // Placeholder
+      // Recipient address from contract config
 
       const tx = await signer.sendTransaction({
-        to: recipientAddress,
+        to: BILLING_CONTRACT_ADDRESS,
         value: ethers.parseEther(plan.price.toString()),
       });
 
       setStep('verifying');
       toast.promise(tx.wait(), {
-        loading: 'Đang xác nhận giao dịch trên blockchain...',
-        success: 'Giao dịch thành công!',
-        error: 'Xác nhận giao dịch thất bại',
+        loading: 'Confirming transaction on blockchain...',
+        success: 'Transaction successful!',
+        error: 'Transaction confirmation failed',
       });
 
       await tx.wait();
 
       // 4. Submit Hash to Backend
-      await depositService.submitTransaction(depositId, tx.hash);
+      await billingService.submitTransaction(depositId, tx.hash);
 
       setSuccess(true);
-      toast.success('Thanh toán thành công!', {
-        description: `Bạn đã mua ${plan.credits} credits. Chờ hệ thống xác nhận trong giây lát.`,
+      toast.success('Payment successful!', {
+        description: `You have purchased ${plan.credits} credits. Please wait for system confirmation.`,
       });
 
       // We don't close immediately, let them see the success state
     } catch (error: any) {
       console.error('Purchase error:', error);
-      toast.error('Thanh toán thất bại', {
-        description: error.message || 'Có lỗi xảy ra trong quá trình giao dịch',
+      toast.error('Payment failed', {
+        description: error.message || 'An error occurred during transaction',
       });
       setStep('plan');
     } finally {
@@ -113,10 +117,10 @@ export function BuyCreditsModal({ isOpen, onDismiss }: DialogProps) {
             <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
               <Sparkles className="text-amber-500" size={20} />
             </div>
-            <span>Mua Credits</span>
+            <span>Buy Credits</span>
           </DialogTitle>
           <p className="text-xs text-zinc-500 mt-1">
-            Nâng cấp tài khoản của bạn để tạo nhiều manga hơn.
+            Upgrade your account to generate more manga.
           </p>
         </DialogHeader>
 
@@ -127,17 +131,17 @@ export function BuyCreditsModal({ isOpen, onDismiss }: DialogProps) {
                 <CheckCircle2 className="text-green-500" size={32} />
               </div>
               <div className="space-y-2">
-                <h3 className="text-lg font-bold">Giao dịch đã gửi!</h3>
+                <h3 className="text-lg font-bold">Transaction Sent!</h3>
                 <p className="text-sm text-zinc-400">
-                  Hệ thống đang xác thực giao dịch trên chuỗi. <br />
-                  Số dư credits của bạn sẽ được cập nhật tự động.
+                  The system is verifying your transaction on-chain. <br />
+                  Your credit balance will be updated automatically.
                 </p>
               </div>
               <button
                 onClick={handleClose}
                 className="w-full mt-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-xl text-sm font-semibold transition-colors"
               >
-                Đóng
+                Close
               </button>
             </div>
           ) : (
@@ -209,11 +213,11 @@ export function BuyCreditsModal({ isOpen, onDismiss }: DialogProps) {
                   <div className="text-xs">
                     <p className="font-semibold text-zinc-200">
                       {step === 'payment'
-                        ? 'Đang thực hiện thanh toán...'
-                        : 'Đang xác thực giao dịch...'}
+                        ? 'Processing payment...'
+                        : 'Verifying transaction...'}
                     </p>
                     <p className="text-zinc-500">
-                      Vui lòng kiểm tra và xác nhận trong ví của bạn.
+                      Please check and confirm in your wallet.
                     </p>
                   </div>
                 </div>
@@ -222,12 +226,12 @@ export function BuyCreditsModal({ isOpen, onDismiss }: DialogProps) {
               <div className="flex items-center gap-2 p-3 bg-blue-500/5 border border-blue-500/20 rounded-xl">
                 <Icons.Wallet className="text-blue-400 shrink-0" size={16} />
                 <p className="text-[10px] text-zinc-400">
-                  Kết nối:{' '}
+                  Connected:{' '}
                   <span className="text-zinc-200 font-mono">
                     {wallets[0]?.address.slice(0, 6)}...
                     {wallets[0]?.address.slice(-4)}
                   </span>{' '}
-                  trên{' '}
+                  on{' '}
                   <span className="text-blue-400 font-semibold">
                     Polkadot TestNet
                   </span>

@@ -1,11 +1,11 @@
 import { ApiEndpoints } from '@/constants/server';
 import { AuthResponse, User } from '@/hooks/use-auth';
-import { AppApiClient } from '@/services/app-api-client';
+import { ApiClient } from '@/services/api-client';
 
 /**
  * Service for handling all authentication-related API calls.
  */
-class AuthService extends AppApiClient {
+class AuthService extends ApiClient {
   /**
    * Log in a user with credentials.
    * @param credentials - The login payload (e.g. email, password)

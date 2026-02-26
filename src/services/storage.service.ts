@@ -1,5 +1,5 @@
 import { ApiEndpoints } from '@/constants/server';
-import { AppApiClient } from '@/services/app-api-client';
+import { ApiClient } from '@/services/api-client';
 import { GeneratedManga, MangaProject, MangaSession } from '@/types';
 import { formatUrl } from '@/utils/api-formatter';
 
@@ -26,7 +26,7 @@ export interface FetchPublicProjectsResult {
 /**
  * Service for handling all storage and project-related API calls.
  */
-class StorageService extends AppApiClient {
+class StorageService extends ApiClient {
   /**
    * Save project to backend
    */

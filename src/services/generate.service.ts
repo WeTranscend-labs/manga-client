@@ -1,5 +1,5 @@
 import { ApiEndpoints } from '@/constants/server';
-import { AppApiClient } from '@/services/app-api-client';
+import { ApiClient } from '@/services/api-client';
 import { GeneratedManga } from '@/types';
 import {
   BatchGenerateRequest,
@@ -16,7 +16,7 @@ import { formatUrl } from '@/utils/api-formatter';
 /**
  * Service for handling all generation-related API calls.
  */
-class GenerateService extends AppApiClient {
+class GenerateService extends ApiClient {
   /**
    * Trigger a single image generation.
    */

@@ -65,6 +65,11 @@ export enum ApiEndpoints {
   // Grok
   GROK_GENERATE = '/api/grok/generate',
   GROK_HISTORY = '/api/grok/history',
+
+  // Billing
+  BILLING_TOP_UP = '/api/billing/top-up',
+  BILLING_TOP_UP_SUBMIT = '/api/billing/top-up/submit',
+  BILLING_TOP_UP_STATUS = '/api/billing/top-up/status',
 }
 
 export const BACKEND_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;

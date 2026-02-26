@@ -8,6 +8,7 @@ import { useProjectsStore } from '@/stores/projects.store';
 import { useStudioUIStore } from '@/stores/studio-ui.store';
 import { useUIStore } from '@/stores/ui.store';
 import { formatUrl } from '@/utils/api-formatter';
+import { usePrivy } from '@privy-io/react-auth';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -16,6 +17,7 @@ import { useShallow } from 'zustand/react/shallow';
 
 export const StudioHeader = () => {
   const router = useRouter();
+  const { logout: privyLogout } = usePrivy();
 
   // Stores
   const currentProject = useProjectsStore((state) => state.currentProject);
@@ -34,11 +36,22 @@ export const StudioHeader = () => {
     ? currentSession.pages.filter((p) => p.markedForExport).length
     : (currentProject?.pages || []).filter((p) => p.markedForExport).length;
 
-  const handleLogout = () => {
-    authStore.clear();
-    authStore.setError(null);
-    toast.success('Signed out successfully');
-    router.push(Route.LOGIN);
+  const handleLogout = async () => {
+    try {
+      // Clear local store
+      authStore.clear();
+      authStore.setError(null);
+
+      // Call Privy logout to clear wallet sessions
+      await privyLogout();
+
+      toast.success('Signed out successfully');
+      router.push(Route.HOME); // Redirect to Home/Landing instead of Login for better UX
+    } catch (error) {
+      console.error('Logout failed:', error);
+      // Fallback redirect
+      router.push(Route.HOME);
+    }
   };
 
   return (

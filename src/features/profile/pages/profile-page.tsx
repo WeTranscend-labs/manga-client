@@ -97,9 +97,7 @@ function ProfileContent() {
     // Show welcome banner if coming from registration
     if (searchParams.get('welcome') === 'true') {
       setShowWelcomeBanner(true);
-      toast.success(
-        'Chào mừng bạn đến với Manga Studio! Hãy hoàn thiện profile của bạn.',
-      );
+      toast.success('Welcome to Manga Studio! Please complete your profile.');
     }
   }, [searchParams]);
 
@@ -155,7 +153,7 @@ function ProfileContent() {
         // Hide welcome banner after first save
         setShowWelcomeBanner(false);
       }
-      toast.success('Cập nhật profile thành công');
+      toast.success('Profile updated successfully');
     } catch {
       // handled in api
     } finally {
@@ -187,9 +185,7 @@ function ProfileContent() {
         prev.map((p) => (p.id === project.id ? { ...p, isPublic: value } : p)),
       );
       toast.success(
-        value
-          ? 'Đã public tập truyện lên community'
-          : 'Đã ẩn tập truyện khỏi community',
+        value ? 'Story published to community' : 'Story hidden from community',
       );
     } catch {
       // handled in api
@@ -206,7 +202,7 @@ function ProfileContent() {
         prev.map((p) => (p.id === projectId ? { ...p, tags } : p)),
       );
       setProjectTags((prev) => ({ ...prev, [projectId]: tags }));
-      toast.success('Đã cập nhật tags');
+      toast.success('Tags updated');
     } catch {
       // handled in api
     } finally {
@@ -219,7 +215,7 @@ function ProfileContent() {
       <div className="flex items-center justify-center py-24">
         <div className="flex flex-col items-center gap-4">
           <div className="w-8 h-8 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
-          <div className="text-zinc-400 text-sm">Đang tải profile...</div>
+          <div className="text-zinc-400 text-sm">Loading profile...</div>
         </div>
       </div>
     );
@@ -235,11 +231,11 @@ function ProfileContent() {
           </div>
           <div className="flex-1 space-y-1">
             <h3 className="text-sm font-semibold text-amber-300">
-              Chào mừng bạn đến với Manga Studio!
+              Welcome to Manga Studio!
             </h3>
             <p className="text-xs text-zinc-300">
-              Hãy hoàn thiện thông tin profile của bạn để có trải nghiệm tốt
-              nhất. Bạn có thể thêm tên hiển thị, giới thiệu và avatar.
+              Please complete your profile information for the best experience.
+              You can add a display name, bio, and avatar.
             </p>
           </div>
           <button
@@ -259,10 +255,10 @@ function ProfileContent() {
           </div>
           <div className="flex-1 space-y-1">
             <h3 className="text-sm font-semibold text-blue-300">
-              Hoàn thiện profile của bạn
+              Complete your profile
             </h3>
             <p className="text-xs text-zinc-300">
-              Thêm thông tin chi tiết để cộng đồng biết thêm về bạn.
+              Add more details so the community can get to know you.
             </p>
           </div>
         </div>
@@ -271,10 +267,10 @@ function ProfileContent() {
       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
         <div className="space-y-4 max-w-xl">
           <h1 className="text-2xl md:text-3xl font-manga text-amber-400">
-            Hồ sơ của bạn
+            Your Profile
           </h1>
           <p className="text-sm text-zinc-400">
-            Chỉnh sửa thông tin cá nhân và quản lý tập truyện public lên
+            Edit your personal information and manage public stories on the
             community.
           </p>
 
@@ -306,13 +302,13 @@ function ProfileContent() {
                   className="bg-zinc-950 border-zinc-700 text-sm"
                 />
                 <p className="text-[10px] text-zinc-500">
-                  Nhập URL ảnh đại diện của bạn
+                  Enter your avatar image URL
                 </p>
               </div>
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs text-zinc-400">Tên hiển thị</label>
+              <label className="text-xs text-zinc-400">Display Name</label>
               <Input
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
@@ -320,7 +316,7 @@ function ProfileContent() {
               />
             </div>
             <div className="space-y-1">
-              <label className="text-xs text-zinc-400">Giới thiệu</label>
+              <label className="text-xs text-zinc-400">About / Bio</label>
               <Textarea
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
@@ -333,7 +329,7 @@ function ProfileContent() {
           {/* Contact Information Section */}
           <div className="space-y-3 bg-zinc-900/60 border border-zinc-800 rounded-2xl p-4">
             <h3 className="text-sm font-semibold text-zinc-200 mb-3">
-              Thông tin liên hệ
+              Contact Information
             </h3>
             <div className="space-y-3">
               <div className="space-y-1">
@@ -347,7 +343,7 @@ function ProfileContent() {
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-xs text-zinc-400">Số điện thoại</label>
+                <label className="text-xs text-zinc-400">Phone Number</label>
                 <Input
                   type="tel"
                   value={phone}
@@ -357,11 +353,11 @@ function ProfileContent() {
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-xs text-zinc-400">Địa chỉ</label>
+                <label className="text-xs text-zinc-400">Address</label>
                 <Input
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
-                  placeholder="Thành phố, Quốc gia"
+                  placeholder="City, Country"
                   className="bg-zinc-950 border-zinc-700 text-sm"
                 />
               </div>
@@ -381,7 +377,7 @@ function ProfileContent() {
           {/* Social Links Section */}
           <div className="space-y-3 bg-zinc-900/60 border border-zinc-800 rounded-2xl p-4">
             <h3 className="text-sm font-semibold text-zinc-200 mb-3">
-              Mạng xã hội
+              Social Media
             </h3>
             <div className="space-y-3">
               <div className="space-y-1">
@@ -416,7 +412,7 @@ function ProfileContent() {
                   onChange={(e) =>
                     setSocialLinks({ ...socialLinks, facebook: e.target.value })
                   }
-                  placeholder="URL Facebook"
+                  placeholder="Facebook URL"
                   className="bg-zinc-950 border-zinc-700 text-sm"
                 />
               </div>
@@ -427,7 +423,7 @@ function ProfileContent() {
                   onChange={(e) =>
                     setSocialLinks({ ...socialLinks, youtube: e.target.value })
                   }
-                  placeholder="URL YouTube"
+                  placeholder="YouTube URL"
                   className="bg-zinc-950 border-zinc-700 text-sm"
                 />
               </div>
@@ -438,7 +434,7 @@ function ProfileContent() {
                   onChange={(e) =>
                     setSocialLinks({ ...socialLinks, tiktok: e.target.value })
                   }
-                  placeholder="@username hoặc URL"
+                  placeholder="@username or URL"
                   className="bg-zinc-950 border-zinc-700 text-sm"
                 />
               </div>
@@ -448,11 +444,11 @@ function ProfileContent() {
           {/* Preferences Section */}
           <div className="space-y-3 bg-zinc-900/60 border border-zinc-800 rounded-2xl p-4">
             <h3 className="text-sm font-semibold text-zinc-200 mb-3">
-              Tùy chọn
+              Preferences
             </h3>
             <div className="space-y-3">
               <div className="space-y-1">
-                <label className="text-xs text-zinc-400">Giao diện</label>
+                <label className="text-xs text-zinc-400">Interface Theme</label>
                 <select
                   value={preferences.theme}
                   onChange={(e) =>
@@ -463,13 +459,13 @@ function ProfileContent() {
                   }
                   className="w-full bg-zinc-950 border border-zinc-700 rounded-md px-3 py-2 text-sm text-white"
                 >
-                  <option value="auto">Tự động</option>
-                  <option value="light">Sáng</option>
-                  <option value="dark">Tối</option>
+                  <option value="auto">Auto</option>
+                  <option value="light">Light</option>
+                  <option value="dark">Dark</option>
                 </select>
               </div>
               <div className="space-y-1">
-                <label className="text-xs text-zinc-400">Ngôn ngữ</label>
+                <label className="text-xs text-zinc-400">Language</label>
                 <select
                   value={preferences.language}
                   onChange={(e) =>
@@ -477,14 +473,14 @@ function ProfileContent() {
                   }
                   className="w-full bg-zinc-950 border border-zinc-700 rounded-md px-3 py-2 text-sm text-white"
                 >
-                  <option value="vi">Tiếng Việt</option>
+                  <option value="vi">Vietnamese</option>
                   <option value="en">English</option>
                   <option value="ja">日本語</option>
                   <option value="ko">한국어</option>
                 </select>
               </div>
               <div className="space-y-2 pt-2 border-t border-zinc-800">
-                <label className="text-xs text-zinc-400">Thông báo</label>
+                <label className="text-xs text-zinc-400">Notifications</label>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-zinc-300">Email</span>
@@ -517,7 +513,7 @@ function ProfileContent() {
                     />
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-zinc-300">Bình luận</span>
+                    <span className="text-xs text-zinc-300">Comments</span>
                     <Switch
                       checked={preferences.notifications.comments}
                       onCheckedChange={(checked: boolean) =>
@@ -556,19 +552,19 @@ function ProfileContent() {
             disabled={!profile || savingProfile}
             className="w-full inline-flex items-center justify-center px-4 py-2 rounded-lg bg-amber-500 text-black text-sm font-semibold hover:bg-amber-400 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
           >
-            {savingProfile ? 'Đang lưu...' : 'Lưu tất cả thay đổi'}
+            {savingProfile ? 'Saving...' : 'Save all changes'}
           </button>
         </div>
       </div>
 
       <div className="space-y-4">
         <h2 className="text-lg md:text-xl font-manga text-zinc-100">
-          Bộ sưu tập truyện của bạn
+          Your Story Collection
         </h2>
         {projects.length === 0 ? (
           <p className="text-sm text-zinc-500">
-            Bạn chưa có tập truyện nào. Hãy tạo truyện trong Studio rồi quay lại
-            đây để public lên community.
+            You don't have any stories yet. Create a story in the Studio and
+            come back here to publish it to the community.
           </p>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -597,7 +593,7 @@ function ProfileContent() {
                       />
                     ) : (
                       <span className="text-xs text-zinc-500">
-                        Chưa có ảnh preview
+                        No preview image
                       </span>
                     )}
                   </div>
@@ -611,14 +607,14 @@ function ProfileContent() {
                       </div>
                       {updatedLabel && (
                         <div className="text-[11px] text-zinc-600">
-                          Cập nhật: {updatedLabel}
+                          Updated: {updatedLabel}
                         </div>
                       )}
                     </div>
                     {/* Tags */}
                     <div className="mt-2 space-y-1">
                       <label className="text-[10px] text-zinc-500">
-                        Tags (phân cách bằng dấu phẩy)
+                        Tags (comma separated)
                       </label>
                       <Input
                         value={(
@@ -672,7 +668,7 @@ function ProfileContent() {
                     <div className="mt-3 flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2">
                         <span className="text-xs text-zinc-400">
-                          Public trên community
+                          Public on community
                         </span>
                         <Switch
                           checked={!!project.isPublic}
@@ -699,7 +695,7 @@ export function ProfilePage(_props: any) {
     <Page className="py-10">
       <Suspense
         fallback={
-          <LoadingPage className="py-24" message="Đang tải profile..." />
+          <LoadingPage className="py-24" message="Loading profile..." />
         }
       >
         <ProfileContent />

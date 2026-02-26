@@ -117,7 +117,7 @@ export default function PromptPanel({
             }}
             placeholder={
               isAutoContinue
-                ? "Gợi ý hướng phát triển story (optional)... VD: 'The hero discovers a secret', 'A battle begins', 'They meet a new character'..."
+                ? "Suggest story direction (optional)... e.g. 'The hero discovers a secret', 'A battle begins', 'They meet a new character'..."
                 : hasPages
                   ? 'Continue the story with the SAME characters from Context...'
                   : 'Describe the scene: A hero standing on a rooftop, looking at the sunset...'
@@ -181,8 +181,9 @@ export default function PromptPanel({
                         className="animate-spin shrink-0"
                       />
                       <span>
-                        <strong>2-Step Process:</strong> ① AI tạo prompt mới từ
-                        page {batchProgress.current}→ ② Gen ảnh từ prompt đó
+                        <strong>2-Step Process:</strong> ① AI creates new prompt
+                        from page {batchProgress.current} → ② Gen image from
+                        that prompt
                       </span>
                     </div>
                   )}

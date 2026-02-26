@@ -1,11 +1,11 @@
 import { ApiEndpoints } from '@/constants/server';
-import { AppApiClient } from '@/services/app-api-client';
+import { ApiClient } from '@/services/api-client';
 import type { UserProfile } from '@/types';
 
 /**
  * Service for handling all user-related API calls.
  */
-class UserService extends AppApiClient {
+class UserService extends ApiClient {
   /**
    * Fetch the current user's profile.
    */

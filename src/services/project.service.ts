@@ -1,12 +1,12 @@
 import { ApiEndpoints } from '@/constants/server';
-import { AppApiClient } from '@/services/app-api-client';
+import { ApiClient } from '@/services/api-client';
 import { Project } from '@/types/projects';
 import { formatUrl } from '@/utils/api-formatter';
 
 /**
  * Service for handling all project-related API calls (CRUD, pages, panels).
  */
-class ProjectService extends AppApiClient {
+class ProjectService extends ApiClient {
   /**
    * List all projects for the current user.
    */
