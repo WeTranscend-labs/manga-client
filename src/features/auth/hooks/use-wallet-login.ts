@@ -50,7 +50,7 @@ export function useWalletLogin(onSuccess?: () => void) {
       console.error('[useWalletLogin] SIWE login failed:', error);
       setIsLoggingIn(false);
       toast.error('Đăng nhập ví thất bại', {
-        description: error.message,
+        description: (error as any)?.message || String(error),
       });
     },
   });

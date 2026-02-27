@@ -9,8 +9,20 @@ export interface CreateTopUpResponse {
 
 export interface TopUpStatusResponse {
   top_up_id: string;
-  status: 'pending' | 'completed' | 'failed';
+  status: 'PENDING' | 'COMPLETED' | 'FAILED' | 'EXPIRED';
   amount: number;
+}
+
+export interface CreditPack {
+  id: string;
+  name: string;
+  description: string;
+  amount: number;
+  credits: number;
+  isActive: boolean;
+  isPopular: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export class BillingService extends ApiClient {
@@ -35,6 +47,10 @@ export class BillingService extends ApiClient {
       topUpId,
     });
     return this.get<TopUpStatusResponse>(url);
+  }
+
+  async getCreditPacks(): Promise<CreditPack[]> {
+    return this.get<CreditPack[]>(ApiEndpoints.BILLING_CREDIT_PACKS);
   }
 }
 

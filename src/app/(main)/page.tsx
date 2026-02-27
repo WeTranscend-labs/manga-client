@@ -1,11 +1,9 @@
 import { Page } from '@/components/layout/page';
-import {
-  AnimatedMangaListSection,
-  FeaturesSection,
-  Hero,
-  RecentCreationsSection,
-} from "@/features/landing";
-import { VideoDemoSection } from "@/features/landing/components/video-demo-section";
+import { AnimatedMangaListSection } from '@/features/landing/components/organisms/animated-manga-list-section';
+import { FeaturesSection } from '@/features/landing/components/organisms/features-section';
+import { Hero } from '@/features/landing/components/organisms/hero';
+import { RecentCreationsSection } from '@/features/landing/components/organisms/recent-creations-section';
+import { VideoDemoSection } from '@/features/landing/components/organisms/video-demo-section';
 
 export default function LandingPage() {
   return (

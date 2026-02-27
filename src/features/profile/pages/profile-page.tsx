@@ -1,19 +1,16 @@
 'use client';
 
 import { Page } from '@/components/layout/page';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Input } from '@/components/ui/input';
 import { LoadingPage } from '@/components/ui/loading';
-import { Switch } from '@/components/ui/switch';
-import { Textarea } from '@/components/ui/textarea';
 import { storageService } from '@/services/storage.service';
 import { userService } from '@/services/user.service';
 import type { MangaProject, UserProfile } from '@/types';
-import { Camera, Sparkles, X } from 'lucide-react';
-import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { WelcomeBanners } from '../components/molecules/welcome-banners';
+import { ProfileProjects } from '../components/organisms/profile-projects';
+import { ProfileSettings } from '../components/organisms/profile-settings';
 
 function ProfileContent() {
   const searchParams = useSearchParams();
@@ -223,469 +220,47 @@ function ProfileContent() {
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 space-y-8">
-      {/* Welcome Banner */}
-      {showWelcomeBanner && (
-        <div className="bg-linear-to-r from-amber-500/20 to-amber-600/20 border border-amber-500/30 rounded-2xl p-4 flex items-start gap-3 relative">
-          <div className="bg-amber-500/20 rounded-full p-2 shrink-0">
-            <Sparkles className="h-5 w-5 text-amber-400" />
-          </div>
-          <div className="flex-1 space-y-1">
-            <h3 className="text-sm font-semibold text-amber-300">
-              Welcome to Manga Studio!
-            </h3>
-            <p className="text-xs text-zinc-300">
-              Please complete your profile information for the best experience.
-              You can add a display name, bio, and avatar.
-            </p>
-          </div>
-          <button
-            onClick={() => setShowWelcomeBanner(false)}
-            className="text-zinc-400 hover:text-zinc-200 transition-colors shrink-0"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-      )}
-
-      {/* Incomplete Profile Banner */}
-      {isProfileIncomplete && !showWelcomeBanner && (
-        <div className="bg-blue-500/10 border border-blue-500/30 rounded-2xl p-4 flex items-start gap-3">
-          <div className="bg-blue-500/20 rounded-full p-2 shrink-0">
-            <Sparkles className="h-5 w-5 text-blue-400" />
-          </div>
-          <div className="flex-1 space-y-1">
-            <h3 className="text-sm font-semibold text-blue-300">
-              Complete your profile
-            </h3>
-            <p className="text-xs text-zinc-300">
-              Add more details so the community can get to know you.
-            </p>
-          </div>
-        </div>
-      )}
+      <WelcomeBanners
+        showWelcomeBanner={showWelcomeBanner}
+        setShowWelcomeBanner={setShowWelcomeBanner}
+        isProfileIncomplete={isProfileIncomplete}
+      />
 
       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
-        <div className="space-y-4 max-w-xl">
-          <h1 className="text-2xl md:text-3xl font-manga text-amber-400">
-            Your Profile
-          </h1>
-          <p className="text-sm text-zinc-400">
-            Edit your personal information and manage public stories on the
-            community.
-          </p>
-
-          <div className="space-y-3 bg-zinc-900/60 border border-zinc-800 rounded-2xl p-4">
-            {/* Avatar Section */}
-            <div className="flex items-center gap-4 pb-4 border-b border-zinc-800">
-              <div className="relative">
-                <Avatar className="h-20 w-20 border-2 border-amber-400/50">
-                  <AvatarImage
-                    src={avatarUrl}
-                    alt={displayName || profile?.username}
-                  />
-                  <AvatarFallback className="bg-zinc-800 text-amber-400 text-xl font-semibold">
-                    {profile
-                      ? getInitials(displayName || profile.username)
-                      : 'U'}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="absolute -bottom-1 -right-1 bg-zinc-900 rounded-full p-1.5 border border-zinc-700">
-                  <Camera className="h-3 w-3 text-amber-400" />
-                </div>
-              </div>
-              <div className="flex-1 space-y-1">
-                <label className="text-xs text-zinc-400">Avatar URL</label>
-                <Input
-                  value={avatarUrl}
-                  onChange={(e) => setAvatarUrl(e.target.value)}
-                  placeholder="https://example.com/avatar.jpg"
-                  className="bg-zinc-950 border-zinc-700 text-sm"
-                />
-                <p className="text-[10px] text-zinc-500">
-                  Enter your avatar image URL
-                </p>
-              </div>
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-xs text-zinc-400">Display Name</label>
-              <Input
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-                className="bg-zinc-950 border-zinc-700 text-sm"
-              />
-            </div>
-            <div className="space-y-1">
-              <label className="text-xs text-zinc-400">About / Bio</label>
-              <Textarea
-                value={bio}
-                onChange={(e) => setBio(e.target.value)}
-                rows={4}
-                className="bg-zinc-950 border-zinc-700 text-sm resize-none"
-              />
-            </div>
-          </div>
-
-          {/* Contact Information Section */}
-          <div className="space-y-3 bg-zinc-900/60 border border-zinc-800 rounded-2xl p-4">
-            <h3 className="text-sm font-semibold text-zinc-200 mb-3">
-              Contact Information
-            </h3>
-            <div className="space-y-3">
-              <div className="space-y-1">
-                <label className="text-xs text-zinc-400">Email</label>
-                <Input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="your@email.com"
-                  className="bg-zinc-950 border-zinc-700 text-sm"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs text-zinc-400">Phone Number</label>
-                <Input
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+84 xxx xxx xxx"
-                  className="bg-zinc-950 border-zinc-700 text-sm"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs text-zinc-400">Address</label>
-                <Input
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  placeholder="City, Country"
-                  className="bg-zinc-950 border-zinc-700 text-sm"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs text-zinc-400">Website</label>
-                <Input
-                  type="url"
-                  value={website}
-                  onChange={(e) => setWebsite(e.target.value)}
-                  placeholder="https://yourwebsite.com"
-                  className="bg-zinc-950 border-zinc-700 text-sm"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Social Links Section */}
-          <div className="space-y-3 bg-zinc-900/60 border border-zinc-800 rounded-2xl p-4">
-            <h3 className="text-sm font-semibold text-zinc-200 mb-3">
-              Social Media
-            </h3>
-            <div className="space-y-3">
-              <div className="space-y-1">
-                <label className="text-xs text-zinc-400">Twitter/X</label>
-                <Input
-                  value={socialLinks.twitter}
-                  onChange={(e) =>
-                    setSocialLinks({ ...socialLinks, twitter: e.target.value })
-                  }
-                  placeholder="@username hoặc URL"
-                  className="bg-zinc-950 border-zinc-700 text-sm"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs text-zinc-400">Instagram</label>
-                <Input
-                  value={socialLinks.instagram}
-                  onChange={(e) =>
-                    setSocialLinks({
-                      ...socialLinks,
-                      instagram: e.target.value,
-                    })
-                  }
-                  placeholder="@username hoặc URL"
-                  className="bg-zinc-950 border-zinc-700 text-sm"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs text-zinc-400">Facebook</label>
-                <Input
-                  value={socialLinks.facebook}
-                  onChange={(e) =>
-                    setSocialLinks({ ...socialLinks, facebook: e.target.value })
-                  }
-                  placeholder="Facebook URL"
-                  className="bg-zinc-950 border-zinc-700 text-sm"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs text-zinc-400">YouTube</label>
-                <Input
-                  value={socialLinks.youtube}
-                  onChange={(e) =>
-                    setSocialLinks({ ...socialLinks, youtube: e.target.value })
-                  }
-                  placeholder="YouTube URL"
-                  className="bg-zinc-950 border-zinc-700 text-sm"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs text-zinc-400">TikTok</label>
-                <Input
-                  value={socialLinks.tiktok}
-                  onChange={(e) =>
-                    setSocialLinks({ ...socialLinks, tiktok: e.target.value })
-                  }
-                  placeholder="@username or URL"
-                  className="bg-zinc-950 border-zinc-700 text-sm"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Preferences Section */}
-          <div className="space-y-3 bg-zinc-900/60 border border-zinc-800 rounded-2xl p-4">
-            <h3 className="text-sm font-semibold text-zinc-200 mb-3">
-              Preferences
-            </h3>
-            <div className="space-y-3">
-              <div className="space-y-1">
-                <label className="text-xs text-zinc-400">Interface Theme</label>
-                <select
-                  value={preferences.theme}
-                  onChange={(e) =>
-                    setPreferences({
-                      ...preferences,
-                      theme: e.target.value as 'light' | 'dark' | 'auto',
-                    })
-                  }
-                  className="w-full bg-zinc-950 border border-zinc-700 rounded-md px-3 py-2 text-sm text-white"
-                >
-                  <option value="auto">Auto</option>
-                  <option value="light">Light</option>
-                  <option value="dark">Dark</option>
-                </select>
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs text-zinc-400">Language</label>
-                <select
-                  value={preferences.language}
-                  onChange={(e) =>
-                    setPreferences({ ...preferences, language: e.target.value })
-                  }
-                  className="w-full bg-zinc-950 border border-zinc-700 rounded-md px-3 py-2 text-sm text-white"
-                >
-                  <option value="vi">Vietnamese</option>
-                  <option value="en">English</option>
-                  <option value="ja">日本語</option>
-                  <option value="ko">한국어</option>
-                </select>
-              </div>
-              <div className="space-y-2 pt-2 border-t border-zinc-800">
-                <label className="text-xs text-zinc-400">Notifications</label>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-zinc-300">Email</span>
-                    <Switch
-                      checked={preferences.notifications.email}
-                      onCheckedChange={(checked: boolean) =>
-                        setPreferences({
-                          ...preferences,
-                          notifications: {
-                            ...preferences.notifications,
-                            email: checked,
-                          },
-                        })
-                      }
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-zinc-300">Push</span>
-                    <Switch
-                      checked={preferences.notifications.push}
-                      onCheckedChange={(checked: boolean) =>
-                        setPreferences({
-                          ...preferences,
-                          notifications: {
-                            ...preferences.notifications,
-                            push: checked,
-                          },
-                        })
-                      }
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-zinc-300">Comments</span>
-                    <Switch
-                      checked={preferences.notifications.comments}
-                      onCheckedChange={(checked: boolean) =>
-                        setPreferences({
-                          ...preferences,
-                          notifications: {
-                            ...preferences.notifications,
-                            comments: checked,
-                          },
-                        })
-                      }
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-zinc-300">Likes</span>
-                    <Switch
-                      checked={preferences.notifications.likes}
-                      onCheckedChange={(checked: boolean) =>
-                        setPreferences({
-                          ...preferences,
-                          notifications: {
-                            ...preferences.notifications,
-                            likes: checked,
-                          },
-                        })
-                      }
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <button
-            onClick={handleSaveProfile}
-            disabled={!profile || savingProfile}
-            className="w-full inline-flex items-center justify-center px-4 py-2 rounded-lg bg-amber-500 text-black text-sm font-semibold hover:bg-amber-400 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
-          >
-            {savingProfile ? 'Saving...' : 'Save all changes'}
-          </button>
-        </div>
+        <ProfileSettings
+          profile={profile}
+          savingProfile={savingProfile}
+          displayName={displayName}
+          setDisplayName={setDisplayName}
+          bio={bio}
+          setBio={setBio}
+          avatarUrl={avatarUrl}
+          setAvatarUrl={setAvatarUrl}
+          email={email}
+          setEmail={setEmail}
+          phone={phone}
+          setPhone={setPhone}
+          location={location}
+          setLocation={setLocation}
+          website={website}
+          setWebsite={setWebsite}
+          socialLinks={socialLinks}
+          setSocialLinks={setSocialLinks}
+          preferences={preferences}
+          setPreferences={setPreferences}
+          handleSaveProfile={handleSaveProfile}
+          getInitials={getInitials}
+        />
       </div>
 
-      <div className="space-y-4">
-        <h2 className="text-lg md:text-xl font-manga text-zinc-100">
-          Your Story Collection
-        </h2>
-        {projects.length === 0 ? (
-          <p className="text-sm text-zinc-500">
-            You don't have any stories yet. Create a story in the Studio and
-            come back here to publish it to the community.
-          </p>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {projects.map((project) => {
-              const cover = project.pages?.[0]?.url;
-              const totalPages = project.pages?.length || 0;
-              const totalSessions = project.sessions?.length || 0;
-              const updated = project.updatedAt || project.createdAt;
-              const updatedLabel = updated
-                ? new Date(updated).toLocaleDateString()
-                : '';
-
-              return (
-                <div
-                  key={project.id}
-                  className="rounded-2xl border border-zinc-800 bg-zinc-900/60 overflow-hidden flex flex-col"
-                >
-                  <div className="h-40 bg-zinc-800/80 flex items-center justify-center relative">
-                    {cover ? (
-                      <Image
-                        src={cover}
-                        alt={project.title || 'Manga cover'}
-                        fill
-                        className="object-cover"
-                        sizes="(max-width: 768px) 100vw, 33vw"
-                      />
-                    ) : (
-                      <span className="text-xs text-zinc-500">
-                        No preview image
-                      </span>
-                    )}
-                  </div>
-                  <div className="px-4 py-3 space-y-2 flex-1 flex flex-col">
-                    <div className="space-y-1">
-                      <div className="text-sm font-semibold truncate">
-                        {project.title || 'Untitled project'}
-                      </div>
-                      <div className="text-[11px] text-zinc-500">
-                        {totalSessions} sessions · {totalPages} pages
-                      </div>
-                      {updatedLabel && (
-                        <div className="text-[11px] text-zinc-600">
-                          Updated: {updatedLabel}
-                        </div>
-                      )}
-                    </div>
-                    {/* Tags */}
-                    <div className="mt-2 space-y-1">
-                      <label className="text-[10px] text-zinc-500">
-                        Tags (comma separated)
-                      </label>
-                      <Input
-                        value={(
-                          projectTags[project.id] ||
-                          project.tags ||
-                          []
-                        ).join(', ')}
-                        onChange={(e) => {
-                          const tags = e.target.value
-                            .split(',')
-                            .map((t) => t.trim())
-                            .filter(Boolean);
-                          setProjectTags((prev) => ({
-                            ...prev,
-                            [project.id]: tags,
-                          }));
-                        }}
-                        onBlur={() => {
-                          const tags =
-                            projectTags[project.id] || project.tags || [];
-                          if (
-                            JSON.stringify(tags) !==
-                            JSON.stringify(project.tags || [])
-                          ) {
-                            handleUpdateTags(project.id, tags);
-                          }
-                        }}
-                        placeholder="action, romance, fantasy..."
-                        className="bg-zinc-950 border-zinc-700 text-xs h-7"
-                        disabled={savingProjectId === project.id}
-                      />
-                      {projectTags[project.id] &&
-                        projectTags[project.id].length > 0 && (
-                          <div className="flex flex-wrap gap-1 mt-1">
-                            {projectTags[project.id].slice(0, 3).map((tag) => (
-                              <span
-                                key={tag}
-                                className="px-1.5 py-0.5 rounded bg-zinc-800 text-[10px] text-amber-300"
-                              >
-                                #{tag}
-                              </span>
-                            ))}
-                            {projectTags[project.id].length > 3 && (
-                              <span className="text-[10px] text-zinc-500">
-                                +{projectTags[project.id].length - 3}
-                              </span>
-                            )}
-                          </div>
-                        )}
-                    </div>
-                    <div className="mt-3 flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-zinc-400">
-                          Public on community
-                        </span>
-                        <Switch
-                          checked={!!project.isPublic}
-                          disabled={savingProjectId === project.id}
-                          onCheckedChange={(val: boolean) =>
-                            handleTogglePublic(project, val)
-                          }
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
+      <ProfileProjects
+        projects={projects}
+        projectTags={projectTags}
+        setProjectTags={setProjectTags}
+        savingProjectId={savingProjectId}
+        handleTogglePublic={handleTogglePublic}
+        handleUpdateTags={handleUpdateTags}
+      />
     </div>
   );
 }

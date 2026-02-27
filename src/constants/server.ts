@@ -70,6 +70,7 @@ export enum ApiEndpoints {
   BILLING_TOP_UP = '/api/billing/top-up',
   BILLING_TOP_UP_SUBMIT = '/api/billing/top-up/submit',
   BILLING_TOP_UP_STATUS = '/api/billing/top-up/status',
+  BILLING_CREDIT_PACKS = '/api/credit-packs',
 }
 
 export const BACKEND_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;

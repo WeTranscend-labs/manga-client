@@ -3,11 +3,11 @@
 import { Icons } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { useModal } from '@/components/ui/modal';
-import { WalletConnectModal } from '@/features/auth/components/modals/wallet-connect-modal';
-import { WalletDetailsModal } from '@/features/auth/components/modals/wallet-details-modal';
 import { useAuth, useIdentityLogin } from '@/hooks/use-auth';
 import { cn } from '@/utils/utils';
 import { usePrivy as useWallet, useWallets } from '@privy-io/react-auth';
+import { WalletConnectModal } from './modals/wallet-connect-modal';
+import { WalletDetailsModal } from './modals/wallet-details-modal';
 
 interface ConnectWalletProps {
   className?: string;

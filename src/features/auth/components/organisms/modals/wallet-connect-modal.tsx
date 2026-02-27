@@ -8,7 +8,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { DialogProps } from '@/components/ui/modal';
-import { useWalletLogin } from '../../hooks/use-wallet-login';
+import { useWalletLogin } from '../../../hooks/use-wallet-login';
 
 const WALLET_OPTIONS = [
   {

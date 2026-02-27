@@ -13,8 +13,6 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Route } from '@/constants';
-import { ConnectWallet } from '@/features/auth/components/connect-wallet';
-import { PasswordStrengthIndicator } from '@/features/auth/components/password-strength';
 import { useRegister } from '@/hooks/use-auth';
 import { registerSchema, type RegisterFormData } from '@/validations/auth';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -24,6 +22,8 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
+import { PasswordStrength } from '../components/molecules/password-strength';
+import { ConnectWallet } from '../components/organisms/connect-wallet';
 
 export function RegisterPage(_props: any) {
   const router = useRouter();
@@ -139,7 +139,7 @@ export function RegisterPage(_props: any) {
                     />
                   </FormControl>
                   {passwordValue && (
-                    <PasswordStrengthIndicator
+                    <PasswordStrength
                       password={passwordValue}
                       className="mt-2"
                     />

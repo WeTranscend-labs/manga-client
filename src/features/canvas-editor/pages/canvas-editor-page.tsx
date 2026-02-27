@@ -1,6 +1,6 @@
 'use client';
 
-import { CanvasEditor } from '@/features/canvas-editor';
+import { CanvasEditor } from '../components/organisms';
 
 export function CanvasEditorPage() {
   return <CanvasEditor />;

@@ -1,4 +1,4 @@
-import { TestimonialCard } from '@/features/auth/components/testimonial-card';
+import { TestimonialCard } from '@/features/auth/components/molecules/testimonial-card';
 import { ReactNode } from 'react';
 
 export default function AuthLayout({ children }: { children: ReactNode }) {

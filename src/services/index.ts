@@ -1,5 +1,6 @@
 export * from './api-client';
 export * from './auth.service';
+export * from './client';
 export * from './community.service';
 export * from './gemini.service';
 export * from './generate.service';

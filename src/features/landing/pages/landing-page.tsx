@@ -1,7 +1,7 @@
 'use client';
 
 import { Page } from '@/components/layout/page';
-import { Hero } from '@/features/landing/components/hero';
+import { Hero } from '@/features/landing/components/organisms/hero';
 
 export function LandingV2Page() {
   return (

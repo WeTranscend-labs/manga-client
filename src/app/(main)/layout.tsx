@@ -1,6 +1,7 @@
 'use client';
 
-import { Footer, Header } from '@/features/landing';
+import { Footer } from '@/features/landing/components/organisms/footer';
+import { Header } from '@/features/landing/components/organisms/header';
 import { ReactNode } from 'react';
 
 export default function MainLayout({ children }: { children: ReactNode }) {

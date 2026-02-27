@@ -13,7 +13,6 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Route } from '@/constants';
-import { ConnectWallet } from '@/features/auth/components/connect-wallet';
 import { useLogin } from '@/hooks/use-auth';
 import { loginSchema, type LoginFormData } from '@/validations/auth';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -23,6 +22,7 @@ import { useRouter } from 'next/navigation';
 import { Suspense, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
+import { ConnectWallet } from '../components/organisms/connect-wallet';
 
 export function LoginPage(_props: any) {
   return (
