@@ -11,6 +11,7 @@ export enum Route {
   STUDIO_PREVIEW = '/studio/preview',
   PROFILE = '/profile',
   COMMUNITY = '/community',
+  PRICING = '/pricing',
   ERROR = '/error',
 }
 

@@ -23,10 +23,10 @@ export const SidebarHeaderOrganism = ({
 }: SidebarHeaderProps) => {
   return (
     <div className="p-4 border-b border-zinc-800 pb-5">
-      <div className="flex items-center gap-2 mb-1">
-        <Icons.Library size={16} className="text-amber-500" />
+      <div className="flex items-center gap-2 mb-1 min-w-0">
+        <Icons.Library size={16} className="text-amber-500 shrink-0" />
         <h2
-          className="text-sm font-bold text-zinc-200 uppercase tracking-wider"
+          className="text-sm font-bold text-zinc-200 uppercase tracking-wider truncate"
           style={{ fontFamily: 'var(--font-inter)' }}
         >
           Project History

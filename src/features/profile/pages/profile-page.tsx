@@ -158,7 +158,8 @@ function ProfileContent() {
     }
   };
 
-  const getInitials = (username: string) => {
+  const getInitials = (username: string | undefined | null) => {
+    if (!username) return 'U';
     return username.substring(0, 2).toUpperCase();
   };
 

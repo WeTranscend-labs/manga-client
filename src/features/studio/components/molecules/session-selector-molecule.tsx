@@ -28,10 +28,12 @@ export const SessionSelectorMolecule = ({
 }: SessionSelectorMoleculeProps) => {
   return (
     <div className="space-y-2 mb-1">
-      <div className="flex gap-2">
+      <div className="flex gap-2 min-w-0">
         <Select value={currentSessionId} onValueChange={onSwitchSession}>
-          <SelectTrigger className="flex-1 bg-zinc-950 border-zinc-800 text-zinc-300 hover:border-amber-500 focus:border-amber-500 h-10 font-sans">
-            <SelectValue />
+          <SelectTrigger className="flex-1 min-w-0 bg-zinc-950 border-zinc-800 text-zinc-300 hover:border-amber-500 focus:border-amber-500 h-10 font-sans">
+            <span className="truncate flex-1 text-left">
+              <SelectValue />
+            </span>
           </SelectTrigger>
           <SelectContent className="bg-zinc-950 border-zinc-800">
             {sessions.map((s) => (

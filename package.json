@@ -15,6 +15,7 @@
     "@dnd-kit/helpers": "^0.3.2",
     "@dnd-kit/react": "^0.3.2",
     "@dnd-kit/sortable": "^10.0.0",
+    "@ducanh2912/next-pwa": "^10.2.9",
     "@google/genai": "1.37.0",
     "@hookform/resolvers": "^3.10.0",
     "@modelcontextprotocol/sdk": "latest",

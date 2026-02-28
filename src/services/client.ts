@@ -77,32 +77,29 @@ export class BaseApiClient {
         if (error.response?.status === 401) {
           // If the request that failed with 401 was the refresh request itself, logout immediately
           if (originalRequest.url?.includes('/api/auth/refresh')) {
-            console.log('[ApiClient] Refresh token failed, logging out');
             this.config.onSessionExpired();
             authEventBus.emit('SESSION_EXPIRED');
             return Promise.reject(error);
           }
 
           if (!originalRequest._retry) {
-            console.log('[ApiClient] 401 detected, attempting refresh');
             originalRequest._retry = true;
 
             try {
               const newToken = await this.refreshAccessToken();
               if (newToken) {
-                console.log('[ApiClient] Token refreshed successfully');
                 if (originalRequest.headers) {
                   originalRequest.headers.Authorization = `Bearer ${newToken}`;
                 }
                 return this.instance(originalRequest);
               }
             } catch (refreshError) {
-              console.error('[ApiClient] Token refresh failed', refreshError);
+              // Token refresh failed silently
             }
 
-            console.log('[ApiClient] Session expired, clearing auth');
             this.config.onSessionExpired();
             authEventBus.emit('SESSION_EXPIRED');
+            return Promise.reject(error);
           }
         }
 
@@ -138,7 +135,7 @@ export class BaseApiClient {
         return data.accessToken;
       }
     } catch (err) {
-      console.error('Token refresh failed');
+      // Return null below
     }
 
     return null;

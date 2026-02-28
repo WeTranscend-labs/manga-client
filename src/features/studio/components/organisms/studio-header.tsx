@@ -1,15 +1,24 @@
 import { Icons } from '@/components/icons';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { IconButton } from '@/components/ui/icon-button';
+import { Logo } from '@/components/ui/logo';
 import { PreviewButton } from '@/components/ui/preview-button';
 import { Route } from '@/constants';
+import { useUser } from '@/hooks/use-auth';
 import { authStore } from '@/stores/auth.store';
 import { useProjectsStore } from '@/stores/projects.store';
 import { useStudioUIStore } from '@/stores/studio-ui.store';
 import { useUIStore } from '@/stores/ui.store';
 import { formatUrl } from '@/utils/api-formatter';
 import { usePrivy } from '@privy-io/react-auth';
-import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
@@ -18,6 +27,7 @@ import { useShallow } from 'zustand/react/shallow';
 export const StudioHeader = () => {
   const router = useRouter();
   const { logout: privyLogout } = usePrivy();
+  const { data: profile } = useUser();
 
   // Stores
   const currentProject = useProjectsStore((state) => state.currentProject);
@@ -61,18 +71,7 @@ export const StudioHeader = () => {
           href={Route.HOME}
           className="flex items-center gap-2 hover:opacity-80 transition-opacity shrink-0"
         >
-          <div className="relative w-8 h-8 sm:w-10 sm:h-10 overflow-hidden rounded-lg border border-zinc-800/50 bg-white/5 flex items-center justify-center ring-1 ring-zinc-700/30">
-            <Image
-              src="/logo.png"
-              alt="Manga Studio logo"
-              fill
-              className="object-contain p-1"
-              sizes="(max-width: 640px) 32px, 40px"
-            />
-          </div>
-          <h1 className="text-sm sm:text-base lg:text-xl font-manga text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.3)] hidden sm:block">
-            MANGA STUDIO
-          </h1>
+          <Logo size="sm" />
         </Link>
         {currentSession && (
           <div className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 bg-zinc-900/60 rounded-lg border border-zinc-800/60 backdrop-blur-sm shadow-sm ring-1 ring-zinc-700/20 shrink-0 min-w-0">
@@ -151,14 +150,57 @@ export const StudioHeader = () => {
           <span>Download PDF</span>
         </Button>
 
-        {/* Sign Out */}
-        <IconButton
-          onClick={handleLogout}
-          title="Sign Out"
-          className="hover:text-red-400"
-        >
-          <Icons.LogOut size={18} className="sm:w-5 sm:h-5" />
-        </IconButton>
+        {/* Profile / Sign Out Dropdown */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="outline-none focus:outline-none ml-1">
+              <Avatar className="h-8 w-8 sm:h-9 sm:w-9 cursor-pointer border-2 border-zinc-800 hover:border-amber-500 transition-all shadow-lg hover:shadow-amber-500/20">
+                <AvatarImage
+                  src={profile?.avatar}
+                  alt={profile?.displayName || profile?.username}
+                />
+                <AvatarFallback className="bg-zinc-800 text-amber-500 text-sm font-bold">
+                  {profile
+                    ? (profile.displayName || profile.username || 'U')
+                        .substring(0, 2)
+                        .toUpperCase()
+                    : 'U'}
+                </AvatarFallback>
+              </Avatar>
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            align="end"
+            className="w-56 bg-zinc-950 border-zinc-800 text-zinc-200"
+          >
+            <div className="px-2 py-1.5 bg-zinc-900/50">
+              <p className="text-sm font-medium text-white">
+                {profile?.displayName || profile?.username || 'User'}
+              </p>
+              {profile?.username && profile?.displayName && (
+                <p className="text-xs text-zinc-500 truncate font-mono mt-0.5">
+                  @{profile.username}
+                </p>
+              )}
+            </div>
+            <DropdownMenuSeparator className="bg-zinc-800" />
+            <DropdownMenuItem
+              className="cursor-pointer focus:bg-amber-500/10 focus:text-amber-500"
+              onClick={() => router.push(formatUrl(Route.PROFILE))}
+            >
+              <Icons.User className="mr-2 h-4 w-4 text-zinc-400" />
+              Profile
+            </DropdownMenuItem>
+            <DropdownMenuSeparator className="bg-zinc-800" />
+            <DropdownMenuItem
+              className="cursor-pointer text-amber-500 focus:text-amber-400 focus:bg-amber-500/10"
+              onClick={handleLogout}
+            >
+              <Icons.LogOut className="mr-2 h-4 w-4" />
+              Sign Out
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </header>
   );

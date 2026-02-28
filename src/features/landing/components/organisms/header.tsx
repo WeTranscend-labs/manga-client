@@ -10,13 +10,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useModal } from '@/components/ui/modal';
+import { Logo } from '@/components/ui/logo';
 import { Route } from '@/constants';
-import { BuyCreditsModal } from '@/features/billing/components/modals/buy-credits-modal';
 import { useLogout, useUser } from '@/hooks/use-auth';
 import { useAuthStore } from '@/stores/auth.store';
 import { formatUrl } from '@/utils/api-formatter';
-import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -25,7 +23,6 @@ export function Header() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const { data: profile } = useUser();
   const { mutate: logout } = useLogout();
-  const [presentBuyCredits] = useModal(BuyCreditsModal);
 
   const handleSignOut = () => {
     logout();
@@ -39,16 +36,7 @@ export function Header() {
     <header className="h-16 flex items-center justify-between container mx-auto px-4 sm:px-6 lg:px-8">
       <div className="flex items-center gap-8">
         <Link href={Route.HOME} className="flex items-center gap-2">
-          <div className="relative w-20 h-10 overflow-hidden rounded-lg border  bg-white flex items-center justify-center">
-            <Image
-              src="/logo.png"
-              alt="Manga Studio logo"
-              fill
-              className="object-contain"
-              sizes="80px"
-            />
-          </div>
-          {/* <span className="font-sans text-xl font-bold text-foreground">Manga Studio</span> */}
+          <Logo size="md" showText={false} />
         </Link>
 
         <nav className="hidden md:flex items-center gap-8">
@@ -89,7 +77,7 @@ export function Header() {
                 {profile?.credits || 0}
               </span>
               <button
-                onClick={() => presentBuyCredits()}
+                onClick={() => router.push(formatUrl(Route.PRICING))}
                 className="ml-1 p-1 hover:bg-zinc-800 rounded-full text-amber-500 transition-colors"
                 title="Mua Credits"
               >
@@ -139,7 +127,7 @@ export function Header() {
                 </div>
                 <DropdownMenuSeparator className="bg-zinc-800" />
                 <DropdownMenuItem
-                  className="cursor-pointer focus:bg-zinc-800 focus:text-white"
+                  className="cursor-pointer focus:bg-amber-500/10 focus:text-amber-500"
                   onClick={() => router.push(formatUrl(Route.PROFILE))}
                 >
                   <Icons.User className="mr-2 h-4 w-4 text-zinc-400 " />
@@ -147,7 +135,7 @@ export function Header() {
                 </DropdownMenuItem>
                 <DropdownMenuSeparator className="bg-zinc-800" />
                 <DropdownMenuItem
-                  className="cursor-pointer text-red-400 focus:text-red-300 focus:bg-red-950/30"
+                  className="cursor-pointer text-amber-500 focus:text-amber-400 focus:bg-amber-500/10"
                   onClick={handleSignOut}
                 >
                   <Icons.LogOut className="mr-2 h-4 w-4" />
