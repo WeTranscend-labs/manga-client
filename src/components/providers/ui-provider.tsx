@@ -6,6 +6,7 @@ import {
   ThemeProvider as NextThemesProvider,
   type ThemeProviderProps,
 } from 'next-themes';
+import NextTopLoader from 'nextjs-toploader';
 import { Toaster } from 'sonner';
 
 export function UIProvider({ children, ...props }: ThemeProviderProps) {
@@ -16,6 +17,7 @@ export function UIProvider({ children, ...props }: ThemeProviderProps) {
       enableSystem
       {...props}
     >
+      <NextTopLoader color="#f59e0b" showSpinner={false} />
       {children}
       <Toaster />
       <ModalContainer />

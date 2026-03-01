@@ -5,7 +5,7 @@ export enum ApiEndpoints {
   AUTH_IDENTITY_LOGIN = '/api/auth/identity-login',
   AUTH_REFRESH = '/api/auth/refresh',
   AUTH_LOGOUT = '/api/auth/logout',
-  AUTH_PROFILE = '/api/auth/profile',
+  AUTH_PROFILE = '/api/users/me',
 
   // Projects
   PROJECTS_LIST = '/api/projects',
@@ -49,8 +49,8 @@ export enum ApiEndpoints {
   IMAGES_OPTIMIZE = '/api/images/{{id}}/optimize',
 
   // Users
-  USERS_PROFILE = '/api/users/profile',
-  USERS_UPDATE_PROFILE = '/api/users/profile',
+  USERS_PROFILE = '/api/users/me',
+  USERS_UPDATE_PROFILE = '/api/users/me',
   USERS_SETTINGS = '/api/users/settings',
   USERS_USAGE = '/api/users/usage',
 
@@ -66,11 +66,11 @@ export enum ApiEndpoints {
   GROK_GENERATE = '/api/grok/generate',
   GROK_HISTORY = '/api/grok/history',
 
-  // Billing
+  // Billing & Plans
   BILLING_TOP_UP = '/api/billing/top-up',
   BILLING_TOP_UP_SUBMIT = '/api/billing/top-up/submit',
   BILLING_TOP_UP_STATUS = '/api/billing/top-up/status',
-  BILLING_CREDIT_PACKS = '/api/credit-packs',
+  PLANS_LIST = '/api/plans',
 }
 
 export const BACKEND_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;

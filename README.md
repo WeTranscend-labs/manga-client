@@ -46,23 +46,27 @@ src/
 ## 🛠️ Cài đặt
 
 1. Clone repository:
+
 ```bash
 git clone <repo-url>
 cd manga-generator
 ```
 
 2. Cài đặt dependencies:
+
 ```bash
 pnpm install
 ```
 
 3. Setup environment variables:
+
 ```bash
 cp .env.example .env.local
 # Cập nhật các biến môi trường trong file .env.local
 ```
 
 4. Start development server:
+
 ```bash
 pnpm dev
 ```
@@ -79,12 +83,15 @@ pnpm dev
 ## 🎨 Features
 
 ### 🏠 Landing Page
+
 - Hero section với animations
 - Feature showcase
 - Pricing plans
 - CTA sections
 
 ### 🎭 Studio Interface
+
+- [📖 Read the Step-by-Step Generation Guide](guide.md)
 - Manga creation workspace
 - Panel management
 - AI-powered content generation
@@ -92,12 +99,14 @@ pnpm dev
 - Export functionality
 
 ### 👤 User Management
+
 - Authentication (Login/Register)
 - User profiles
 - Project management
 - Settings dashboard
 
 ### 🌐 Community
+
 - User galleries
 - Project sharing
 - Social features
@@ -115,13 +124,15 @@ Tham khảo file `.env.example` để xem các biến môi trường cần thi�
 ## 📱 Responsive Design
 
 Ứng dụng được thiết kế responsive cho:
+
 - Desktop (1200px+)
-- Tablet (768px - 1199px)  
+- Tablet (768px - 1199px)
 - Mobile (< 768px)
 
 ## 🎨 UI Components
 
 Sử dụng Shadcn/ui components với custom theming:
+
 - Dark/Light mode support
 - Consistent design system
 - Accessible components
@@ -130,6 +141,7 @@ Sử dụng Shadcn/ui components với custom theming:
 ## 🔄 State Management
 
 Sử dụng Zustand cho state management:
+
 - User state
 - Studio state
 - UI state
@@ -138,11 +150,13 @@ Sử dụng Zustand cho state management:
 ## 🚀 Deployment
 
 ### Vercel (Recommended)
+
 1. Connect repository to Vercel
 2. Configure environment variables
 3. Deploy automatically
 
 ### Manual Deployment
+
 ```bash
 pnpm build
 pnpm start

@@ -6,6 +6,7 @@ import {
   ResizablePanelGroup,
 } from '@/components/ui/resizable';
 import { useStudioGeneration } from '@/features/studio/hooks/useStudioGeneration';
+import { useUser } from '@/hooks/use-auth';
 import { useProjectsStore, useUIStore } from '@/stores';
 import { useStudioUIStore } from '@/stores/studio-ui.store';
 import { MangaConfig } from '@/types';
@@ -36,6 +37,7 @@ export const StudioControls = () => {
     })),
   );
 
+  const { data: profile } = useUser();
   const isMobile = useUIStore((state: any) => state.isMobile);
 
   const {
@@ -102,6 +104,7 @@ export const StudioControls = () => {
           <div className="h-full overflow-hidden flex flex-col">
             <PromptPanel
               prompt={prompt}
+              profile={profile || null}
               currentSession={currentSession}
               loading={false}
               error={null}

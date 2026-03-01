@@ -34,8 +34,6 @@ export function Logo({ className, size = 'md', showText = true }: LogoProps) {
         className={cn(
           'relative overflow-hidden border border-transparent bg-transparent flex items-center justify-center',
           config.container,
-          size === 'sm' &&
-            'bg-white/5 border-zinc-800/50 ring-1 ring-zinc-700/30',
         )}
       >
         <Image

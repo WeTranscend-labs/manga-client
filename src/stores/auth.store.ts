@@ -19,7 +19,6 @@ interface AuthState {
   clear: () => void;
   setError: (err: string | null) => void;
   logout: () => void;
-  updateCredits: (credits: number) => void;
 }
 
 const initialState = {
@@ -83,11 +82,6 @@ export const useAuthStore = create<AuthState>()(
           }
           set(initialState);
         },
-
-        updateCredits: (credits) =>
-          set((state) => ({
-            user: state.user ? { ...state.user, credits } : null,
-          })),
       }),
       {
         name: 'auth-store',

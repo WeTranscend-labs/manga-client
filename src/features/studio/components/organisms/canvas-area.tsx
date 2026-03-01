@@ -26,7 +26,7 @@ export default function CanvasArea({
   onDiscardImage,
 }: CanvasAreaProps) {
   return (
-    <main className="flex-1 bg-zinc-950 flex items-center justify-center p-3 sm:p-4 lg:p-6 xl:p-8 pb-20 sm:pb-24 lg:pb-8 overflow-hidden relative">
+    <main className="flex-1 w-full h-full bg-zinc-950 flex flex-col items-center justify-center p-3 sm:p-4 lg:p-6 xl:p-8 pb-20 sm:pb-24 lg:pb-0 relative overflow-hidden">
       {loading && (
         <div className="flex flex-col items-center gap-5 sm:gap-6 w-full max-w-md px-4">
           <div className="w-48 h-64 sm:w-64 sm:h-80 bg-zinc-900/60 rounded-2xl shadow-2xl shadow-black/50 relative overflow-hidden border border-zinc-800/50 backdrop-blur-sm">
@@ -45,16 +45,28 @@ export default function CanvasArea({
       )}
 
       {!currentImage && !loading && (
-        <div className="text-center space-y-5 sm:space-y-6 opacity-40 max-w-2xl px-4">
-          <p className="font-manga text-4xl sm:text-5xl lg:text-6xl text-zinc-700 drop-shadow-[0_0_20px_rgba(0,0,0,0.5)]">
-            CANVAS
-          </p>
-          <p
-            className="text-sm sm:text-base lg:text-lg text-zinc-500 leading-relaxed"
-            style={{ fontFamily: 'var(--font-inter)' }}
-          >
-            Describe your story moment to generate manga
-          </p>
+        <div className="flex flex-col items-center justify-center text-center space-y-6 max-w-lg px-6 animate-in fade-in zoom-in duration-700">
+          <div className="relative w-24 h-24 mb-2 flex items-center justify-center rounded-3xl bg-zinc-900/40 border border-zinc-800/60 shadow-2xl backdrop-blur-sm group transition-all duration-500 hover:border-amber-500/30 hover:bg-zinc-900/60">
+            <div className="absolute inset-0 rounded-3xl bg-amber-500/5 blur-xl group-hover:bg-amber-500/10 transition-colors duration-500"></div>
+            <Icons.Image className="w-10 h-10 text-zinc-600 group-hover:text-amber-500/80 drop-shadow-md transition-colors duration-500" />
+            <Icons.Sparkles className="absolute top-6 right-6 w-4 h-4 text-amber-500/0 group-hover:text-amber-500/60 transition-colors duration-500" />
+          </div>
+
+          <div className="space-y-3">
+            <h2 className="font-manga text-3xl sm:text-4xl text-zinc-300 drop-shadow-md tracking-wider">
+              YOUR BLANK CANVAS
+            </h2>
+            <p className="text-sm sm:text-base text-zinc-500 leading-relaxed font-mono max-w-sm mx-auto">
+              Configure your story context and describe a moment in the prompt
+              panel to generate your first manga page.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-4 w-48 pt-4 opacity-40">
+            <div className="h-px bg-linear-to-r from-transparent via-zinc-600 to-transparent flex-1"></div>
+            <div className="w-1.5 h-1.5 rotate-45 bg-zinc-600"></div>
+            <div className="h-px bg-linear-to-r from-transparent via-zinc-600 to-transparent flex-1"></div>
+          </div>
         </div>
       )}
 

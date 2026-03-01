@@ -179,6 +179,11 @@ export interface UserProfile {
       likes?: boolean;
     };
   };
+  plan?: string;
+  generationCount?: number;
+  monthlyGenerationLimit?: number;
+  storageUsed?: number;
+  storageLimit?: number;
   stats?: {
     totalProjects?: number;
     totalLikes?: number;
@@ -205,3 +210,4 @@ export interface ProjectComment {
 // Re-export canvas types
 export * from './api';
 export * from './canvas';
+export * from './plans';

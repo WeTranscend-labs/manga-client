@@ -7,7 +7,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { MangaConfig, MangaSession } from '@/types';
+import { MangaConfig, MangaSession, UserProfile } from '@/types';
 import { cleanUserPrompt } from '@/utils/prompt-utils';
 import { useState } from 'react';
 
@@ -16,6 +16,7 @@ import { StudioSectionHeader } from '../molecules/studio-section-header';
 
 interface PromptPanelProps {
   prompt: string;
+  profile: UserProfile | null;
   currentSession: MangaSession | null;
   loading: boolean;
   error: string | null;
@@ -32,6 +33,7 @@ interface PromptPanelProps {
 
 export default function PromptPanel({
   prompt,
+  profile,
   currentSession,
   loading,
   error,
@@ -48,6 +50,12 @@ export default function PromptPanel({
   const [batchPopoverOpen, setBatchPopoverOpen] = useState(false);
   const hasPages = currentSession && currentSession.pages.length > 0;
   const isAutoContinue = config.autoContinueStory && hasPages;
+
+  const isLimitReached = !!(
+    profile &&
+    profile.monthlyGenerationLimit !== -1 &&
+    (profile.generationCount || 0) >= (profile.monthlyGenerationLimit || 0)
+  );
 
   const handleBatchSelect = (count: number) => {
     setBatchPopoverOpen(false);
@@ -199,7 +207,10 @@ export default function PromptPanel({
           <button
             onClick={onGenerate}
             disabled={
-              loading || batchLoading || (!prompt.trim() && !isAutoContinue)
+              loading ||
+              batchLoading ||
+              (!prompt.trim() && !isAutoContinue) ||
+              isLimitReached
             }
             className="px-4 sm:px-6 py-3 sm:py-3.5 bg-linear-to-b from-amber-400 to-amber-600 hover:from-amber-500 hover:to-amber-700 disabled:from-zinc-800 disabled:to-zinc-900 disabled:text-zinc-600 text-black font-manga text-sm sm:text-base rounded-xl transition-all flex items-center justify-center gap-2 shadow-[0_4px_0_0_rgb(180,83,9)] hover:shadow-[0_4px_0_0_rgb(180,83,9)] hover:scale-[1.02] active:shadow-[0_1px_0_0_rgb(180,83,9)] disabled:shadow-none active:translate-y-1 disabled:translate-y-0 disabled:cursor-not-allowed ring-2 ring-transparent hover:ring-amber-500/30 touch-manipulation min-h-[48px] sm:min-h-[52px]"
           >
@@ -223,7 +234,9 @@ export default function PromptPanel({
                   disabled={
                     loading ||
                     batchLoading ||
-                    (!prompt.trim() && !isAutoContinue)
+                    (!prompt.trim() && !isAutoContinue) ||
+                    isLimitReached ||
+                    false
                   }
                   className="px-4 sm:px-6 py-3 sm:py-3.5 bg-linear-to-b from-amber-400 to-amber-600 hover:from-amber-500 hover:to-amber-700 disabled:from-zinc-800 disabled:to-zinc-900 disabled:text-zinc-600 text-black font-manga text-sm sm:text-base rounded-xl transition-all flex items-center justify-center gap-2 shadow-[0_4px_0_0_rgb(180,83,9)] hover:shadow-[0_4px_0_0_rgb(180,83,9)] hover:scale-[1.02] active:shadow-[0_1px_0_0_rgb(180,83,9)] disabled:shadow-none active:translate-y-1 disabled:translate-y-0 disabled:cursor-not-allowed ring-2 ring-transparent hover:ring-amber-500/30 touch-manipulation min-h-[48px] sm:min-h-[52px]"
                 >

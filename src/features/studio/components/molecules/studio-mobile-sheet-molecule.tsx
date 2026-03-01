@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
 import { DEFAULT_MANGA_CONFIG } from '@/constants/manga-defaults';
 import { useStudioGeneration } from '@/features/studio/hooks/useStudioGeneration';
+import { useUser } from '@/hooks/use-auth';
 import { useProjectsStore } from '@/stores/projects.store';
 import { useStudioUIStore } from '@/stores/studio-ui.store';
 import { MangaConfig } from '@/types';
@@ -16,6 +17,7 @@ import SessionSidebar from '../organisms/session-sidebar';
 import StorySettingsPanel from '../organisms/story-settings-panel';
 
 export const StudioMobileSheet = () => {
+  const { data: profile } = useUser();
   const currentProject = useProjectsStore((state) => state.currentProject);
   const currentSession = useProjectsStore((state) => state.currentSession);
   const setCurrentSession = useProjectsStore(
@@ -225,6 +227,7 @@ export const StudioMobileSheet = () => {
               {/* Step 3 — Write Your Prompt + Generate */}
               <PromptPanel
                 prompt={prompt}
+                profile={profile || null}
                 currentSession={currentSession}
                 loading={false}
                 error={null}

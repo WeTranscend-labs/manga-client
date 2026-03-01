@@ -1,6 +1,6 @@
 'use client';
 
-import { LoadingPage } from '@/components/ui/loading';
+import { SplashScreen } from '@/components/ui/splash-screen';
 import { PUBLIC_ROUTES, Route } from '@/constants';
 import { useAuth, useIdentityLogin, useUser } from '@/hooks/use-auth';
 import { formatUrl } from '@/utils/api-formatter';
@@ -91,7 +91,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   ]);
 
   if (isUserLoading || !ready) {
-    return <LoadingPage message="Synchronizing session..." />;
+    return <SplashScreen />;
   }
 
   return <>{children}</>;

@@ -13,18 +13,6 @@ export interface TopUpStatusResponse {
   amount: number;
 }
 
-export interface CreditPack {
-  id: string;
-  name: string;
-  description: string;
-  amount: number;
-  credits: number;
-  isActive: boolean;
-  isPopular: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
-
 export class BillingService extends ApiClient {
   async initiateTopUp(amount: number): Promise<CreateTopUpResponse> {
     return this.post<CreateTopUpResponse>(ApiEndpoints.BILLING_TOP_UP, {
@@ -47,10 +35,6 @@ export class BillingService extends ApiClient {
       topUpId,
     });
     return this.get<TopUpStatusResponse>(url);
-  }
-
-  async getCreditPacks(): Promise<CreditPack[]> {
-    return this.get<CreditPack[]>(ApiEndpoints.BILLING_CREDIT_PACKS);
   }
 }
 

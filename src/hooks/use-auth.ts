@@ -70,6 +70,8 @@ export function useUser() {
     },
     retry: false, // Don't retry if profile fetch fails (meaning not logged in)
     staleTime: Infinity, // User data doesn't change often
+    refetchOnMount: false, // Stop infinite background refetch + remount loops if query fails
+    refetchOnWindowFocus: false, // Prevent unexpected refetches while working
   });
 }
 
