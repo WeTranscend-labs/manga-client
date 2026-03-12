@@ -173,7 +173,7 @@ export const StudioHeader = () => {
                 }`}
               >
                 <AvatarImage
-                  src={profile?.avatar}
+                  src={profile?.avatarUrl}
                   alt={profile?.displayName || profile?.username}
                   className="bg-zinc-950"
                 />
@@ -193,7 +193,7 @@ export const StudioHeader = () => {
           >
             <div className="flex flex-col p-1">
               <UserProfileBlock
-                avatar={profile?.avatar}
+                avatarUrl={profile?.avatarUrl}
                 name={profile?.displayName}
                 username={profile?.username}
                 onClick={() => router.push(formatUrl(Route.PROFILE))}

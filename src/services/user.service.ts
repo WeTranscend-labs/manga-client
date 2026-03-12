@@ -10,12 +10,7 @@ class UserService extends ApiClient {
    * Fetch the current user's profile.
    */
   async getMyProfile(): Promise<UserProfile | null> {
-    try {
-      return await this.get<UserProfile>(ApiEndpoints.USERS_PROFILE);
-    } catch (error) {
-      console.error('Failed to fetch profile:', error);
-      return null;
-    }
+    return await this.get<UserProfile>(ApiEndpoints.USERS_PROFILE);
   }
 
   /**

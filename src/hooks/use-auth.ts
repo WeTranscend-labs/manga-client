@@ -33,7 +33,7 @@ export interface User {
   email: string;
   username: string;
   displayName?: string;
-  avatar?: string;
+  avatarUrl?: string;
   bio?: string;
   plan: 'free' | 'premium' | 'pro';
   generationCount: number;

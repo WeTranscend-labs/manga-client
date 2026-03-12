@@ -1,7 +1,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface UserProfileBlockProps {
-  avatar?: string;
+  avatarUrl?: string;
   name?: string;
   username?: string;
   onClick?: () => void;
@@ -9,7 +9,7 @@ interface UserProfileBlockProps {
 }
 
 export const UserProfileBlock = ({
-  avatar,
+  avatarUrl,
   name,
   username,
   onClick,
@@ -31,7 +31,7 @@ export const UserProfileBlock = ({
       onClick={onClick}
     >
       <Avatar className="h-8 w-8 shrink-0">
-        <AvatarImage src={avatar} alt={name || username} />
+        <AvatarImage src={avatarUrl} alt={name || username} />
         <AvatarFallback className="bg-zinc-800 text-zinc-300 font-medium text-xs">
           {getInitials(name, username)}
         </AvatarFallback>

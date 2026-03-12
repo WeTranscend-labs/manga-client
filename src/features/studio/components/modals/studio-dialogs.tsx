@@ -162,6 +162,8 @@ export const StudioDialogs = () => {
       {fullscreenPreview.open && fullscreenPreview.image && (
         <FullscreenModal
           imageUrl={fullscreenPreview.image}
+          images={fullscreenPreview.images || []}
+          currentIndex={fullscreenPreview.currentIndex || 0}
           isFromCanvas={fullscreenPreview.isFromCanvas}
           onClose={() =>
             setStudioState({
@@ -169,9 +171,23 @@ export const StudioDialogs = () => {
                 ...fullscreenPreview,
                 open: false,
                 image: null,
+                images: [],
+                currentIndex: 0,
               },
             })
           }
+          onNavigate={(index: number) => {
+            const images = fullscreenPreview.images || [];
+            if (images.length > 0) {
+              setStudioState({
+                fullscreenPreview: {
+                  ...fullscreenPreview,
+                  image: images[index],
+                  currentIndex: index,
+                },
+              });
+            }
+          }}
           onAddToProject={
             fullscreenPreview.isFromCanvas ? handleAddToProject : undefined
           }

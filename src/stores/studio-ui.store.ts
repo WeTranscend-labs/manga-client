@@ -27,6 +27,8 @@ interface StudioUIState {
     open: boolean;
     image: string | null;
     isFromCanvas: boolean;
+    images?: string[];
+    currentIndex?: number;
   };
 
   // Actions
@@ -57,6 +59,8 @@ const initialState = {
     open: false,
     image: null,
     isFromCanvas: false,
+    images: [],
+    currentIndex: 0,
   },
 };
 

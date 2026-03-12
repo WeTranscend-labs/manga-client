@@ -16,9 +16,6 @@ export function StoryContextField({
   label = 'Context',
   placeholder = 'Describe your story context...',
 }: StoryContextFieldProps) {
-  // Local state for immediate feedback
-  // Initially synced from prop, but we don't sync back down via Effect to avoid loops.
-  // The 'key' in parent handles resets on session switch.
   const [localValue, setLocalValue] = useState(value);
 
   const debouncedOnChange = useDebouncedCallback((val: string) => {

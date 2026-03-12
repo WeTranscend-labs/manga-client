@@ -209,15 +209,21 @@ export const StudioMobileSheet = () => {
               onDeletePages={(ids) =>
                 setDeleteConfirmation({ open: true, type: 'pages', ids })
               }
-              onOpenFullscreen={(url) =>
+              onOpenFullscreen={(url) => {
+                const images = pagesToShow
+                  .map((p) => p.url)
+                  .filter(Boolean) as string[];
+                const index = images.indexOf(url);
                 setStudioState({
                   fullscreenPreview: {
                     open: true,
                     image: url,
                     isFromCanvas: false,
+                    images,
+                    currentIndex: index >= 0 ? index : 0,
                   },
-                })
-              }
+                });
+              }}
               onConfigChange={updateSessionConfig}
             />
           )}

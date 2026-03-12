@@ -15,7 +15,7 @@ interface AuthProviderProps {
 export function AuthProvider({ children }: AuthProviderProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const { isLoading: isUserLoading } = useUser();
+  const { isLoading: isUserLoading, isError: isProfileError } = useUser();
   const { isAuthenticated, setSyncing } = useAuth();
 
   const {
@@ -54,7 +54,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           }
         } catch (error) {
           console.error('[AuthProvider] Failed to sync session:', error);
-          syncAttempted.current = false;
+          // Don't reset syncAttempted here to prevent infinite retry loops
           setSyncing(false);
         }
       }
@@ -77,12 +77,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
         (route) => pathname === route || pathname.startsWith(route + '/'),
       );
 
+      // If we are on a protected route and profile fetch failed, redirect to error page
+      if (!isPublicRoute && isProfileError) {
+        console.error('[AuthProvider] User profile fetch failed on protected route. Redirecting to error page.');
+        router.push(Route.ERROR);
+        return;
+      }
+
       if (!isPublicRoute && !isAuthenticated && !isWeb3Authenticated) {
         router.push(formatUrl(Route.LOGIN, { returnUrl: pathname }));
       }
     }
   }, [
     isUserLoading,
+    isProfileError,
     isAuthenticated,
     isWeb3Authenticated,
     ready,

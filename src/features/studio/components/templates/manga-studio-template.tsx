@@ -137,6 +137,8 @@ export const MangaStudio = () => {
             open: true,
             image: currentImage,
             isFromCanvas: true,
+            images: currentImage ? [currentImage] : [],
+            currentIndex: 0,
           },
         })
       }
