@@ -13,7 +13,7 @@ export const StudioSectionLabel = ({
 }: StudioSectionLabelProps) => {
   return (
     <label
-      className={`text-sm font-bold text-zinc-200 uppercase tracking-wider flex items-center gap-2 ${className}`}
+      className={`text-xs font-semibold text-zinc-300 uppercase tracking-widest flex items-center gap-2 ${className}`}
       style={{ fontFamily: 'var(--font-inter)' }}
     >
       {children}

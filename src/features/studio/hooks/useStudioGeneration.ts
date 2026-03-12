@@ -10,13 +10,13 @@ interface UseStudioGenerationProps {
   context: string;
   config: MangaConfig;
   project: MangaProject;
-  setProject: React.Dispatch<React.SetStateAction<MangaProject>>;
+  setProject: (project: MangaProject) => void;
   currentSession: MangaSession | null;
-  setCurrentSession: React.Dispatch<React.SetStateAction<MangaSession | null>>;
+  setCurrentSession: (session: MangaSession | null) => void;
   setCurrentImage: (url: string | null) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
-  setRetryCount: React.Dispatch<React.SetStateAction<number>>;
+  setRetryCount?: (fn: (prev: number) => number) => void;
   retryCount: number;
 }
 
@@ -75,12 +75,15 @@ export function useStudioGeneration({
     };
 
     setCurrentSession(sessionWithUserMessage);
-    setProject((prev) => ({
-      ...prev,
-      sessions: (prev.sessions || []).map((s) =>
-        s.id === currentSession.id ? sessionWithUserMessage : s,
-      ),
-    }));
+
+    if (project) {
+      setProject({
+        ...project,
+        sessions: (project.sessions || []).map((s) =>
+          s.id === currentSession.id ? sessionWithUserMessage : s,
+        ),
+      });
+    }
 
     const startProgress = () => {
       if (progressIntervalRef.current)
@@ -107,18 +110,17 @@ export function useStudioGeneration({
     startProgress();
 
     try {
-      // Use generateService instead of direct geminiService
-      const response = await generateService.generateSingle({
+      const response: any = await generateService.generateSingle({
         prompt: finalPrompt,
         config: { ...config, context: context || config.context },
         sessionHistory: currentSession.pages || [],
       });
 
-      if (!response.data) {
+      if (!response) {
         throw new Error('No data returned from generation');
       }
 
-      const { page: generatedPage, imageUrl } = response.data;
+      const { page: generatedPage, imageUrl } = response;
 
       setGenerationProgress(100);
       await new Promise((resolve) => setTimeout(resolve, 300));
@@ -136,17 +138,20 @@ export function useStudioGeneration({
       const finalSession: MangaSession = {
         ...sessionWithUserMessage,
         chatHistory: [...sessionWithUserMessage.chatHistory, assistantMessage],
-        pages: [...(currentSession.pages || []), generatedPage], // Add the generated page to session
+        pages: [...(currentSession.pages || []), generatedPage],
         updatedAt: Date.now(),
       };
 
       setCurrentSession(finalSession);
-      setProject((prev) => ({
-        ...prev,
-        sessions: (prev.sessions || []).map((s) =>
-          s.id === currentSession.id ? finalSession : s,
-        ),
-      }));
+
+      if (project) {
+        setProject({
+          ...project,
+          sessions: (project.sessions || []).map((s) =>
+            s.id === currentSession.id ? finalSession : s,
+          ),
+        });
+      }
     } catch (err: any) {
       console.error('Generation error:', err);
       setError(extractErrorMessage(err));
@@ -158,6 +163,7 @@ export function useStudioGeneration({
     }
   }, [
     currentSession,
+    project,
     prompt,
     context,
     config,
@@ -177,67 +183,83 @@ export function useStudioGeneration({
       setBatchProgress({ current: 0, total: totalPages });
       setError(null);
 
-      const sessionId = currentSession.id;
-      let localSession = {
-        ...currentSession,
-        pages: [...(currentSession.pages || [])],
-      };
-      let currentPrompt = prompt;
+      try {
+        const sessionId = currentSession.id;
+        let localSession = {
+          ...currentSession,
+          pages: [...(currentSession.pages || [])],
+        };
 
-      for (let i = 0; i < totalPages; i++) {
-        if (batchCancelledRef.current) break;
+        for (let i = 0; i < totalPages; i++) {
+          if (batchCancelledRef.current) break;
 
-        try {
-          const configWithContext = {
-            ...config,
-            context: context || config.context,
-            autoContinueStory: false,
-          };
-          const sessionHistory = localSession.pages || [];
+          try {
+            const configWithContext = {
+              ...config,
+              context: context || config.context,
+              autoContinueStory: false,
+            };
+            const sessionHistory = localSession.pages || [];
+            const pagePrompt = i === 0 ? prompt : '';
 
-          // For first page use provided prompt (or auto if empty/derived)
-          // For subsequent pages, let server generate prompt by passing empty prompt
-          const pagePrompt = i === 0 ? prompt : '';
+            if (i > 0) {
+              setBatchProgress({ current: i, total: totalPages });
+            }
 
-          if (i > 0) {
-            setBatchProgress({ current: i, total: totalPages });
+            const response: any = await generateService.generateSingle({
+              prompt: pagePrompt,
+              config: configWithContext,
+              sessionHistory: sessionHistory,
+              isAutoContinue: i > 0 || !prompt?.trim(),
+            });
+
+            if (!response || !response.page) {
+              throw new Error('No page returned from generation');
+            }
+
+            const newPage = response.page;
+            newPage.markedForExport = true;
+
+            localSession = {
+              ...localSession,
+              pages: [...localSession.pages, newPage],
+              updatedAt: Date.now(),
+            };
+
+            setCurrentSession(localSession);
+
+            if (project) {
+              setProject({
+                ...project,
+                sessions: (project.sessions || []).map((s) =>
+                  s.id === sessionId ? localSession : s,
+                ),
+              });
+            }
+          } catch (err) {
+            console.error(`Batch page ${i + 1} error:`, err);
+            if (i === 0) throw err;
+            break;
           }
-
-          const response = await generateService.generateSingle({
-            prompt: pagePrompt,
-            config: configWithContext,
-            sessionHistory: sessionHistory,
-            isAutoContinue: i > 0 || !prompt?.trim(), // Force auto-continue for subsequent pages
-          });
-
-          if (!response.data || !response.data.page) {
-            throw new Error('No page returned from generation');
-          }
-
-          const newPage = response.data.page;
-          // Ensure marked for export
-          newPage.markedForExport = true;
-
-          localSession = {
-            ...localSession,
-            pages: [...localSession.pages, newPage],
-            updatedAt: Date.now(),
-          };
-          setCurrentSession((prev) =>
-            prev?.id === sessionId ? localSession : prev,
-          );
-        } catch (err) {
-          console.error(`Batch page ${i + 1} error:`, err);
-          if (i === 0) throw err;
-          break;
         }
+      } catch (err) {
+        setError(extractErrorMessage(err));
+      } finally {
+        setBatchLoading(false);
+        setBatchProgress(null);
+        batchGeneratingRef.current = false;
       }
-
-      setBatchLoading(false);
-      setBatchProgress(null);
-      batchGeneratingRef.current = false;
     },
-    [currentSession, prompt, context, config, setCurrentSession, setError],
+    [
+      currentSession,
+      project,
+      prompt,
+      context,
+      config,
+      setCurrentSession,
+      setProject,
+      setError,
+    ],
   );
 
   const cancelBatchGenerate = useCallback(() => {

@@ -1,6 +1,7 @@
 'use client';
 
 import { Icons } from '@/components/icons';
+import { Button } from '@/components/ui/button';
 import { GenerationProgress } from '@/components/ui/generation-progress';
 import {
   Popover,
@@ -8,7 +9,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { MangaConfig, MangaSession, UserProfile } from '@/types';
-import { cleanUserPrompt } from '@/utils/prompt-utils';
+import { useDebouncedCallback } from '@/utils/react-utils';
 import { useState } from 'react';
 
 import { StudioTextArea } from '../atoms/studio-text-area';
@@ -31,7 +32,7 @@ interface PromptPanelProps {
   onCancelBatch: () => void;
 }
 
-export default function PromptPanel({
+export function PromptPanel({
   prompt,
   profile,
   currentSession,
@@ -47,249 +48,162 @@ export default function PromptPanel({
   onBatchGenerate,
   onCancelBatch,
 }: PromptPanelProps) {
-  const [batchPopoverOpen, setBatchPopoverOpen] = useState(false);
-  const hasPages = currentSession && currentSession.pages.length > 0;
-  const isAutoContinue = config.autoContinueStory && hasPages;
+  // Local state for immediate responsiveness
+  // Key reset in parent handles initial sync/resets on session switch.
+  const [localPrompt, setLocalPrompt] = useState(prompt);
 
-  const isLimitReached = !!(
-    profile &&
-    profile.monthlyGenerationLimit !== -1 &&
-    (profile.generationCount || 0) >= (profile.monthlyGenerationLimit || 0)
-  );
+  const debouncedOnPromptChange = useDebouncedCallback((val: string) => {
+    onPromptChange(val);
+  }, 500);
 
-  const handleBatchSelect = (count: number) => {
-    setBatchPopoverOpen(false);
-    // Small delay to ensure state updates are processed
-    setTimeout(() => {
-      onBatchGenerate(count);
-    }, 100);
+  const handlePromptChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const val = e.target.value;
+    setLocalPrompt(val);
+    debouncedOnPromptChange(val);
   };
 
-  const headerBadge = (
-    <>
-      {currentSession && currentSession.pages.length > 0 && (
-        <span className="text-[9px] text-zinc-500 font-normal normal-case">
-          (Page {currentSession.pages.length + 1})
-        </span>
-      )}
-      {isAutoContinue && (
-        <span className="text-[9px] text-amber-400/80 font-normal normal-case flex items-center gap-1 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
-          <Icons.Wand2 size={10} />
-          Auto-Continue ON
-        </span>
-      )}
-    </>
-  );
+  const handleManualSyncAndGenerate = () => {
+    if (localPrompt !== prompt) {
+      onPromptChange(localPrompt);
+    }
+    onGenerate();
+  };
+
+  const handleManualSyncAndBatch = (count: number) => {
+    if (localPrompt !== prompt) {
+      onPromptChange(localPrompt);
+    }
+    onBatchGenerate(count);
+  };
+
+  const showBatchMenu = currentSession && currentSession.pages.length === 0;
 
   return (
-    <div className="flex-1 h-full min-h-0 flex flex-col bg-transparent overflow-hidden">
-      {/* 1. Scrollable Content Area: Header + Textarea + Progress */}
-      <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-4 sm:p-5 flex flex-col gap-4">
-        {/* Step 3 Header */}
-        <StudioSectionHeader
-          step={3}
-          label="Write Your Prompt"
-          badge={headerBadge}
-        />
+    <div className="flex-1 min-h-0 flex flex-col p-4 pt-3 bg-zinc-950/20">
+      <StudioSectionHeader step={3} label="Describe your page" />
 
-        {/* Prompt Textarea Container */}
-        <div className="flex-1 min-h-0 flex flex-col">
+      <div className="flex-1 min-h-0 flex flex-col space-y-4">
+        <div className="flex-1 min-h-0 relative">
           <StudioTextArea
-            value={prompt}
-            onChange={(e) => {
-              const value = e.target.value;
-              if (
-                value.length > 200 &&
-                (value.includes('╔') ||
-                  value.includes('⚠️') ||
-                  value.includes('CRITICAL'))
-              ) {
-                const cleaned = cleanUserPrompt(value);
-                onPromptChange(cleaned);
-              } else {
-                onPromptChange(value);
-              }
-            }}
-            onPaste={(e) => {
-              const pastedText = e.clipboardData.getData('text');
-              if (
-                pastedText.length > 200 &&
-                (pastedText.includes('╔') ||
-                  pastedText.includes('⚠️') ||
-                  pastedText.includes('CRITICAL'))
-              ) {
-                e.preventDefault();
-                const cleaned = cleanUserPrompt(pastedText);
-                onPromptChange(cleaned);
-              }
-            }}
-            placeholder={
-              isAutoContinue
-                ? "Suggest story direction (optional)... e.g. 'The hero discovers a secret', 'A battle begins', 'They meet a new character'..."
-                : hasPages
-                  ? 'Continue the story with the SAME characters from Context...'
-                  : 'Describe the scene: A hero standing on a rooftop, looking at the sunset...'
-            }
-            disabled={batchLoading}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-                onGenerate();
-              }
-            }}
+            value={localPrompt}
+            onChange={handlePromptChange}
+            placeholder="What's happening in this page? Describe the characters, action, and setting..."
           />
         </div>
 
-        {/* Progress Section */}
-        {(loading || batchLoading) && (
-          <div className="shrink-0 space-y-4">
-            {/* Single Generation Progress */}
-            {loading && !batchLoading && (
-              <GenerationProgress
-                progress={generationProgress}
-                retryCount={retryCount}
-                label="Generating image..."
-              />
-            )}
-
-            {/* Batch Progress */}
-            {batchLoading && batchProgress && (
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs">
-                  <span
-                    className="text-zinc-300 font-bold flex items-center gap-2"
-                    style={{ fontFamily: 'var(--font-inter)' }}
-                  >
-                    <Icons.Zap size={14} className="animate-pulse" />
-                    {batchProgress.current === 0
-                      ? 'CREATING PAGE 1...'
-                      : batchProgress.current < batchProgress.total
-                        ? `CREATING PAGE ${batchProgress.current + 1}...`
-                        : 'COMPLETE!'}
-                  </span>
-                  <span
-                    className="text-zinc-400"
-                    style={{ fontFamily: 'var(--font-inter)' }}
-                  >
-                    {batchProgress.current} / {batchProgress.total} pages
-                  </span>
-                </div>
-                <div className="relative h-2 bg-zinc-950 rounded-full overflow-hidden border border-zinc-800">
-                  <div
-                    className="absolute inset-y-0 left-0 bg-linear-to-r from-zinc-600 via-zinc-500 to-zinc-600 transition-all duration-500"
-                    style={{
-                      width: `${(batchProgress.current / batchProgress.total) * 100}%`,
-                    }}
-                  />
-                </div>
-                {batchProgress.current >= 1 &&
-                  batchProgress.current < batchProgress.total && (
-                    <div className="text-[9px] text-zinc-400 flex items-center gap-1 leading-relaxed">
-                      <Icons.Wand2
-                        size={10}
-                        className="animate-spin shrink-0"
-                      />
-                      <span>
-                        <strong>2-Step Process:</strong> ① AI creates new prompt
-                        from page {batchProgress.current} → ② Gen image from
-                        that prompt
-                      </span>
-                    </div>
-                  )}
+        {/* Generate Button Section */}
+        <div className="shrink-0 space-y-3">
+          {batchLoading && batchProgress ? (
+            <div className="p-3 bg-amber-500/5 border border-amber-500/10 rounded-lg space-y-2">
+              <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-widest italic">
+                <span className="text-amber-500">Batch Processing</span>
+                <span className="text-amber-500/50">
+                  {batchProgress.current} / {batchProgress.total}
+                </span>
               </div>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* 2. Fixed Footer Area: Buttons + Error */}
-      <div className="shrink-0 border-t border-zinc-800/50 bg-zinc-900/80 backdrop-blur-md p-4 sm:p-5 space-y-3">
-        <div className="grid grid-cols-2 gap-2 sm:gap-3">
-          <button
-            onClick={onGenerate}
-            disabled={
-              loading ||
-              batchLoading ||
-              (!prompt.trim() && !isAutoContinue) ||
-              isLimitReached
-            }
-            className="px-4 sm:px-6 py-3 sm:py-3.5 bg-linear-to-b from-amber-400 to-amber-600 hover:from-amber-500 hover:to-amber-700 disabled:from-zinc-800 disabled:to-zinc-900 disabled:text-zinc-600 text-black font-manga text-sm sm:text-base rounded-xl transition-all flex items-center justify-center gap-2 shadow-[0_4px_0_0_rgb(180,83,9)] hover:shadow-[0_4px_0_0_rgb(180,83,9)] hover:scale-[1.02] active:shadow-[0_1px_0_0_rgb(180,83,9)] disabled:shadow-none active:translate-y-1 disabled:translate-y-0 disabled:cursor-not-allowed ring-2 ring-transparent hover:ring-amber-500/30 touch-manipulation min-h-[48px] sm:min-h-[52px]"
-          >
-            {loading ? 'GEN...' : isAutoContinue ? 'CONTINUE' : 'GENERATE'}
-          </button>
-
-          {batchLoading ? (
-            <button
-              onClick={onCancelBatch}
-              className="px-4 sm:px-6 py-3 sm:py-3.5 bg-linear-to-b from-red-500 to-red-700 hover:from-red-600 hover:to-red-800 text-white font-bold text-xs sm:text-sm rounded-xl transition-all flex items-center justify-center gap-2 shadow-[0_4px_0_0_rgb(153,27,27)] hover:shadow-[0_4px_0_0_rgb(153,27,27)] hover:scale-[1.02] active:shadow-[0_1px_0_0_rgb(153,27,27)] active:translate-y-1 ring-2 ring-transparent hover:ring-red-500/30 touch-manipulation min-h-[48px] sm:min-h-[52px]"
-              style={{ fontFamily: 'var(--font-inter)' }}
-            >
-              <Icons.X size={14} className="sm:w-4 sm:h-4" />
-              <span className="hidden sm:inline">CANCEL</span>
-              <span className="sm:hidden">STOP</span>
-            </button>
-          ) : (
-            <Popover open={batchPopoverOpen} onOpenChange={setBatchPopoverOpen}>
-              <PopoverTrigger asChild>
-                <button
-                  disabled={
-                    loading ||
-                    batchLoading ||
-                    (!prompt.trim() && !isAutoContinue) ||
-                    isLimitReached ||
-                    false
-                  }
-                  className="px-4 sm:px-6 py-3 sm:py-3.5 bg-linear-to-b from-amber-400 to-amber-600 hover:from-amber-500 hover:to-amber-700 disabled:from-zinc-800 disabled:to-zinc-900 disabled:text-zinc-600 text-black font-manga text-sm sm:text-base rounded-xl transition-all flex items-center justify-center gap-2 shadow-[0_4px_0_0_rgb(180,83,9)] hover:shadow-[0_4px_0_0_rgb(180,83,9)] hover:scale-[1.02] active:shadow-[0_1px_0_0_rgb(180,83,9)] disabled:shadow-none active:translate-y-1 disabled:translate-y-0 disabled:cursor-not-allowed ring-2 ring-transparent hover:ring-amber-500/30 touch-manipulation min-h-[48px] sm:min-h-[52px]"
-                >
-                  <Icons.Zap size={14} className="sm:w-4 sm:h-4" />
-                  <span className="hidden sm:inline">MULTIPLE</span>
-                  <span className="sm:hidden">BATCH</span>
-                </button>
-              </PopoverTrigger>
-              <PopoverContent
-                className="w-48 bg-zinc-950/95 border-zinc-800/60 backdrop-blur-md p-2 shadow-xl"
-                align="end"
+              <div className="h-1 w-full bg-zinc-800 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-amber-500 transition-all duration-500 ease-out"
+                  style={{
+                    width: `${(batchProgress.current / batchProgress.total) * 100}%`,
+                  }}
+                />
+              </div>
+              <button
+                onClick={onCancelBatch}
+                className="w-full py-1 text-[9px] font-bold text-zinc-500 hover:text-red-400 uppercase tracking-widest transition-colors"
+                style={{ fontFamily: 'var(--font-inter)' }}
               >
-                <div className="space-y-1">
-                  <button
-                    onClick={() => handleBatchSelect(10)}
-                    className="w-full px-4 py-2 text-sm text-zinc-200 hover:bg-zinc-800/60 hover:text-amber-400 rounded-lg transition-all text-left font-medium"
-                    style={{ fontFamily: 'var(--font-inter)' }}
-                  >
-                    x10 Pages
-                  </button>
-                  <button
-                    onClick={() => handleBatchSelect(15)}
-                    className="w-full px-4 py-2 text-sm text-zinc-200 hover:bg-zinc-800/60 hover:text-amber-400 rounded-lg transition-all text-left font-medium"
-                    style={{ fontFamily: 'var(--font-inter)' }}
-                  >
-                    x15 Pages
-                  </button>
-                  <button
-                    onClick={() => handleBatchSelect(20)}
-                    className="w-full px-4 py-2 text-sm text-zinc-200 hover:bg-zinc-800/60 hover:text-amber-400 rounded-lg transition-all text-left font-medium"
-                    style={{ fontFamily: 'var(--font-inter)' }}
-                  >
-                    x20 Pages
-                  </button>
-                  <button
-                    onClick={() => handleBatchSelect(30)}
-                    className="w-full px-4 py-2 text-sm text-zinc-200 hover:bg-zinc-800/60 hover:text-amber-400 rounded-lg transition-all text-left font-medium"
-                    style={{ fontFamily: 'var(--font-inter)' }}
-                  >
-                    x30 Pages
-                  </button>
+                Cancel Batch
+              </button>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <Button
+                disabled={loading}
+                onClick={handleManualSyncAndGenerate}
+                variant="primary-3d"
+                className="flex-1 h-12"
+              >
+                <div className="flex items-center justify-center gap-2">
+                  {loading ? (
+                    <>
+                      <Icons.Loader2 className="w-4 h-4 animate-spin" />
+                      <span className="uppercase tracking-widest text-xs">
+                        Generating...
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <Icons.Sparkles className="w-4 h-4" />
+                      <span className="uppercase tracking-widest text-xs font-black italic">
+                        GENERATE PAGE
+                      </span>
+                    </>
+                  )}
                 </div>
-              </PopoverContent>
-            </Popover>
+              </Button>
+
+              {showBatchMenu && (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      disabled={loading}
+                      variant="secondary"
+                      className="w-12 h-12 p-0 flex items-center justify-center border-zinc-800"
+                    >
+                      <Icons.Layers className="w-5 h-5 text-zinc-500" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent
+                    side="top"
+                    align="end"
+                    className="w-56 p-2 bg-zinc-900 border-zinc-800 shadow-2xl rounded-xl"
+                  >
+                    <div className="px-2 py-1.5 mb-2 border-b border-zinc-800">
+                      <h4 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
+                        Batch Generation
+                      </h4>
+                    </div>
+                    {[5, 10, 15, 20].map((count) => (
+                      <button
+                        key={count}
+                        onClick={() => handleManualSyncAndBatch(count)}
+                        className="w-full flex items-center justify-between px-3 py-2 text-xs text-zinc-400 hover:text-amber-400 hover:bg-amber-500/10 rounded-lg transition-all"
+                        style={{ fontFamily: 'var(--font-inter)' }}
+                      >
+                        <span className="font-medium">
+                          Generate {count} Pages
+                        </span>
+                        <Icons.ChevronRight size={12} className="opacity-50" />
+                      </button>
+                    ))}
+                  </PopoverContent>
+                </Popover>
+              )}
+            </div>
           )}
         </div>
 
-        {/* Error Message */}
+        {/* Progress Display */}
+        {loading && generationProgress > 0 && (
+          <GenerationProgress
+            progress={generationProgress}
+            retryCount={retryCount}
+            className="pb-2"
+          />
+        )}
+
+        {/* Error Display */}
         {error && (
           <div
-            className="p-3 bg-red-900/20 border border-red-800/50 rounded-xl text-red-400 text-xs text-center backdrop-blur-sm shadow-lg shadow-red-900/10 shrink-0"
+            className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-[11px] text-red-400 leading-relaxed"
             style={{ fontFamily: 'var(--font-inter)' }}
           >
+            <div className="flex items-center gap-2 mb-1 font-bold uppercase tracking-wider">
+              <Icons.AlertTriangle size={14} />
+              <span>Generation Error</span>
+            </div>
             {error}
           </div>
         )}
@@ -297,3 +211,5 @@ export default function PromptPanel({
     </div>
   );
 }
+
+export default PromptPanel;

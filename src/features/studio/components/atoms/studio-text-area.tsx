@@ -15,7 +15,7 @@ export const StudioTextArea = React.forwardRef<
     <textarea
       ref={ref}
       className={cn(
-        'w-full flex-1 h-full min-h-0 bg-zinc-950/60 border border-zinc-800/60 rounded-xl p-3 sm:p-4 text-sm sm:text-base leading-relaxed text-zinc-200 placeholder:text-zinc-600 placeholder:text-xs sm:placeholder:text-sm focus:outline-none focus:border-amber-500/60 focus:ring-2 focus:ring-amber-500/20 transition-all resize-none custom-scrollbar backdrop-blur-sm shadow-inner',
+        'w-full flex-1 h-full min-h-0 bg-zinc-950/40 border border-zinc-800/80 rounded-xl p-3 sm:p-4 text-sm leading-relaxed text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/20 transition-all resize-none custom-scrollbar shadow-inner',
         className,
       )}
       style={{ fontFamily: 'var(--font-inter)' }}

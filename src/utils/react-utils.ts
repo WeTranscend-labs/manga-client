@@ -23,6 +23,32 @@ export function useDebounce<T>(value: T, delay: number): T {
 }
 
 /**
+ * Custom hook for debounced callbacks
+ */
+export function useDebouncedCallback<T extends (...args: any[]) => any>(
+  callback: T,
+  delay: number,
+): T {
+  const callbackRef = useRef(callback);
+
+  useEffect(() => {
+    callbackRef.current = callback;
+  }, [callback]);
+
+  const timeoutRef = useRef<any>(null);
+
+  return useCallback(
+    ((...args: any[]) => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      timeoutRef.current = setTimeout(() => {
+        callbackRef.current(...args);
+      }, delay);
+    }) as T,
+    [delay],
+  );
+}
+
+/**
  * Custom hook for stable callback references
  */
 export function useStableCallback<T extends (...args: any[]) => any>(

@@ -10,40 +10,54 @@ import { useUser } from '@/hooks/use-auth';
 import { useProjectsStore, useUIStore } from '@/stores';
 import { useStudioUIStore } from '@/stores/studio-ui.store';
 import { MangaConfig } from '@/types';
+import { useCallback, useState } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import PromptPanel from './prompt-panel';
 import StorySettingsPanel from './story-settings-panel';
 
 export const StudioControls = () => {
   // Global State
-  const project = useProjectsStore((state: any) => state.currentProject);
-  const currentSession = useProjectsStore((state: any) => state.currentSession);
-  const setCurrentSession = useProjectsStore(
-    (state: any) => state.setCurrentSession,
-  );
-  const setLoading = useProjectsStore((state: any) => state.setLoading);
-  const setError = useProjectsStore((state: any) => state.setError);
-  const updateSessionContext = useProjectsStore(
-    (state: any) => state.updateSessionContext,
-  );
-  const updateSessionConfig = useProjectsStore(
-    (state: any) => state.updateSessionConfig,
-  );
-
-  const { prompt, setStudioState } = useStudioUIStore(
+  const { currentProject: project, currentSession } = useProjectsStore(
     useShallow((state: any) => ({
-      prompt: state.prompt,
-      setStudioState: state.setStudioState,
+      currentProject: state.currentProject,
+      currentSession: state.currentSession,
     })),
   );
 
+  const setProject = useProjectsStore((state: any) => state.setCurrentProject);
+  const setCurrentSession = useProjectsStore(
+    (state: any) => state.setCurrentSession,
+  );
+
+  const { prompt, setStudioState, generationLoading, generationProgress } =
+    useStudioUIStore(
+      useShallow((state: any) => ({
+        prompt: state.prompt,
+        setStudioState: state.setStudioState,
+        generationLoading: state.generationLoading,
+        generationProgress: state.generationProgress,
+      })),
+    );
+
   const { data: profile } = useUser();
   const isMobile = useUIStore((state: any) => state.isMobile);
+  const [retryCount, setRetryCount] = useState(0);
+
+  // Callbacks stabilized with useCallback
+  const onContextChange = useCallback((context: string) => {
+    const updateSessionContext =
+      useProjectsStore.getState().updateSessionContext;
+    updateSessionContext(context);
+  }, []);
+
+  const onConfigChange = useCallback((config: MangaConfig) => {
+    const updateSessionConfig = useProjectsStore.getState().updateSessionConfig;
+    updateSessionConfig(config);
+  }, []);
 
   const {
     batchLoading,
     batchProgress,
-    generationProgress,
     handleGenerate,
     handleBatchGenerate,
     cancelBatchGenerate,
@@ -54,15 +68,15 @@ export const StudioControls = () => {
       project?.pages[0]?.config ||
       {}) as MangaConfig,
     project: project!,
-    setProject: () => {},
+    setProject,
     currentSession,
     setCurrentSession,
     setCurrentImage: (url: string | null) =>
       setStudioState({ currentImage: url }),
-    setLoading,
-    setError,
-    setRetryCount: () => {},
-    retryCount: 0,
+    setLoading: (loading) => setStudioState({ generationLoading: loading }),
+    setError: (error) => setStudioState({ error }),
+    setRetryCount,
+    retryCount,
   });
 
   return (
@@ -80,10 +94,11 @@ export const StudioControls = () => {
         >
           <div className="h-full overflow-hidden flex flex-col">
             <StorySettingsPanel
+              key={currentSession?.id || 'none'}
               context={currentSession?.context || ''}
               config={(currentSession?.config || {}) as MangaConfig}
-              onContextChange={updateSessionContext}
-              onConfigChange={updateSessionConfig}
+              onContextChange={onContextChange}
+              onConfigChange={onConfigChange}
             />
           </div>
         </ResizablePanel>
@@ -103,15 +118,16 @@ export const StudioControls = () => {
         >
           <div className="h-full overflow-hidden flex flex-col">
             <PromptPanel
+              key={currentSession?.id || 'none'}
               prompt={prompt}
               profile={profile || null}
               currentSession={currentSession}
-              loading={false}
-              error={null}
+              loading={generationLoading}
+              error={null} // Handle error state correctly if needed
               batchLoading={batchLoading}
               batchProgress={batchProgress}
               generationProgress={generationProgress}
-              retryCount={0}
+              retryCount={retryCount}
               config={(currentSession?.config || {}) as MangaConfig}
               onPromptChange={(p: string) => setStudioState({ prompt: p })}
               onGenerate={handleGenerate}

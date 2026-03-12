@@ -1,5 +1,8 @@
 'use client';
 
+import { useDebouncedCallback } from '@/utils/react-utils';
+import { useState } from 'react';
+
 interface StoryContextFieldProps {
   value: string;
   onChange: (value: string) => void;
@@ -7,12 +10,27 @@ interface StoryContextFieldProps {
   placeholder?: string;
 }
 
-export const StoryContextField = ({
+export function StoryContextField({
   value,
   onChange,
   label = 'Context',
   placeholder = 'Describe your story context...',
-}: StoryContextFieldProps) => {
+}: StoryContextFieldProps) {
+  // Local state for immediate feedback
+  // Initially synced from prop, but we don't sync back down via Effect to avoid loops.
+  // The 'key' in parent handles resets on session switch.
+  const [localValue, setLocalValue] = useState(value);
+
+  const debouncedOnChange = useDebouncedCallback((val: string) => {
+    onChange(val);
+  }, 500);
+
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const val = e.target.value;
+    setLocalValue(val);
+    debouncedOnChange(val);
+  };
+
   return (
     <div className="space-y-2">
       <label
@@ -25,8 +43,8 @@ export const StoryContextField = ({
         </span>
       </label>
       <textarea
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
+        value={localValue}
+        onChange={handleChange}
         placeholder={placeholder}
         className="w-full h-32 bg-zinc-950 border border-zinc-800 rounded-lg p-3 text-sm leading-relaxed text-zinc-300 placeholder:text-zinc-600 placeholder:text-[11px] placeholder:leading-relaxed focus:outline-none focus:border-amber-500 transition-colors resize-none custom-scrollbar min-h-[80px]"
         style={{ fontFamily: 'var(--font-inter)' }}
@@ -34,4 +52,4 @@ export const StoryContextField = ({
       />
     </div>
   );
-};
+}

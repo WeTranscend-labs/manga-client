@@ -18,8 +18,14 @@ import StorySettingsPanel from '../organisms/story-settings-panel';
 
 export const StudioMobileSheet = () => {
   const { data: profile } = useUser();
-  const currentProject = useProjectsStore((state) => state.currentProject);
-  const currentSession = useProjectsStore((state) => state.currentSession);
+  const { currentProject, currentSession } = useProjectsStore(
+    useShallow((state) => ({
+      currentProject: state.currentProject,
+      currentSession: state.currentSession,
+    })),
+  );
+
+  const setProject = useProjectsStore((state) => state.setCurrentProject);
   const setCurrentSession = useProjectsStore(
     (state) => state.setCurrentSession,
   );
@@ -47,6 +53,8 @@ export const StudioMobileSheet = () => {
     prompt,
     setStudioState,
     setDeleteConfirmation,
+    generationLoading,
+    generationProgress,
   } = useStudioUIStore(
     useShallow((state) => ({
       showMobileSettings: state.showMobileSettings,
@@ -54,6 +62,8 @@ export const StudioMobileSheet = () => {
       prompt: state.prompt,
       setStudioState: state.setStudioState,
       setDeleteConfirmation: state.setDeleteConfirmation,
+      generationLoading: state.generationLoading,
+      generationProgress: state.generationProgress,
     })),
   );
 
@@ -62,7 +72,6 @@ export const StudioMobileSheet = () => {
   const {
     batchLoading,
     batchProgress,
-    generationProgress,
     handleGenerate,
     handleBatchGenerate,
     cancelBatchGenerate,
@@ -73,11 +82,11 @@ export const StudioMobileSheet = () => {
       currentProject?.pages[0]?.config ||
       DEFAULT_MANGA_CONFIG) as MangaConfig,
     project: currentProject!,
-    setProject: () => {},
+    setProject,
     currentSession,
     setCurrentSession,
     setCurrentImage: (url) => setStudioState({ currentImage: url }),
-    setLoading,
+    setLoading: (loading) => setStudioState({ generationLoading: loading }),
     setError,
     setRetryCount,
     retryCount,
@@ -216,6 +225,7 @@ export const StudioMobileSheet = () => {
           {activeMobileTab === 'settings' && (
             <div className="p-4 pb-8 flex flex-col gap-6">
               <StorySettingsPanel
+                key={currentSession?.id || 'none'}
                 context={currentSession?.context || ''}
                 config={
                   (currentSession?.config ||
@@ -226,10 +236,11 @@ export const StudioMobileSheet = () => {
               />
               {/* Step 3 — Write Your Prompt + Generate */}
               <PromptPanel
+                key={currentSession?.id || 'none'}
                 prompt={prompt}
                 profile={profile || null}
                 currentSession={currentSession}
-                loading={false}
+                loading={generationLoading}
                 error={null}
                 batchLoading={batchLoading}
                 batchProgress={batchProgress}
@@ -239,12 +250,12 @@ export const StudioMobileSheet = () => {
                   (currentSession?.config ||
                     DEFAULT_MANGA_CONFIG) as MangaConfig
                 }
-                onPromptChange={(p) => setStudioState({ prompt: p })}
+                onPromptChange={(p: string) => setStudioState({ prompt: p })}
                 onGenerate={() => {
                   handleGenerate();
                   close();
                 }}
-                onBatchGenerate={(count) => {
+                onBatchGenerate={(count: number) => {
                   handleBatchGenerate(count);
                   close();
                 }}

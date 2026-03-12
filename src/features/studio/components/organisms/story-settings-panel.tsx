@@ -13,6 +13,7 @@ import {
   ReferenceImage,
   ScreentoneDensity,
 } from '@/types';
+import { useDebouncedCallback } from '@/utils/react-utils';
 import React, { useRef, useState } from 'react';
 import { ConfigSelectField } from '../molecules/config-select-field';
 import { ConfigSwitchField } from '../molecules/config-switch-field';
@@ -27,7 +28,7 @@ interface StorySettingsPanelProps {
   onConfigChange: (config: MangaConfig) => void;
 }
 
-export default function StorySettingsPanel({
+export function StorySettingsPanel({
   context,
   config,
   onContextChange,
@@ -35,6 +36,24 @@ export default function StorySettingsPanel({
 }: StorySettingsPanelProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+
+  // Local state for storyDirection
+  // Initialized from prop, reset happens via 'key' prop in parent
+  const [localStoryDirection, setLocalStoryDirection] = useState(
+    config.storyDirection || '',
+  );
+
+  const debouncedOnConfigChange = useDebouncedCallback((val: string) => {
+    onConfigChange({ ...config, storyDirection: val });
+  }, 500);
+
+  const handleStoryDirectionChange = (
+    e: React.ChangeEvent<HTMLTextAreaElement>,
+  ) => {
+    const val = e.target.value;
+    setLocalStoryDirection(val);
+    debouncedOnConfigChange(val);
+  };
 
   const normalizeImage = (img: string | ReferenceImage): ReferenceImage => {
     if (typeof img === 'string') return { url: img, enabled: true };
@@ -347,10 +366,8 @@ export default function StorySettingsPanel({
           />
           {config.autoContinueStory && (
             <textarea
-              value={config.storyDirection || ''}
-              onChange={(e) =>
-                onConfigChange({ ...config, storyDirection: e.target.value })
-              }
+              value={localStoryDirection}
+              onChange={handleStoryDirectionChange}
               placeholder="Describe the direction of the story..."
               className="w-full h-40 bg-zinc-950 border border-zinc-800 rounded-lg p-3 text-sm text-zinc-300 resize-y custom-scrollbar"
               style={{ fontFamily: 'var(--font-inter)', minHeight: '120px' }}
@@ -361,3 +378,5 @@ export default function StorySettingsPanel({
     </div>
   );
 }
+
+export default StorySettingsPanel;

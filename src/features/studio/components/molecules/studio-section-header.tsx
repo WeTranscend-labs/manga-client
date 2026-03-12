@@ -18,7 +18,7 @@ export const StudioSectionHeader = ({
   className = '',
 }: StudioSectionHeaderProps) => {
   return (
-    <div className={`flex items-center gap-3 pb-1 shrink-0 ${className}`}>
+    <div className={`flex items-center gap-2.5 pb-2 shrink-0 ${className}`}>
       <StudioStepNumber number={step} />
       <div className="flex-1">
         <StudioSectionLabel>

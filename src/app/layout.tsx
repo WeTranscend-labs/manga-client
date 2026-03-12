@@ -8,24 +8,34 @@ const _bangers = Bangers({ weight: '400', subsets: ['latin'] });
 const _geistMono = Geist_Mono({ subsets: ['latin'] });
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
-export const metadata: Metadata = {
-  title: 'Manga Studio - Create AI Manga Art',
-  description:
-    'Generate stunning manga illustrations with AI. Design custom manga pages with professional inking styles, screentones, and layouts.',
-  generator: 'WeTranscend',
-  authors: [{ name: 'WeTranscend', url: 'https://x.com/Tod' }],
-  creator: 'WeTranscend',
-  icons: {
-    icon: [
-      {
-        url: '/logo.png',
-        type: 'image/png',
-      },
-    ],
-    apple: '/logo.png',
-  },
-  manifest: '/manifest.json',
-};
+import { Route } from '@/constants/routes';
+import { constructMetadata } from '@/utils/metadata';
+import { headers } from 'next/headers';
+
+export async function generateMetadata(): Promise<Metadata> {
+  const headersList = await headers();
+  // Get the current path from the middleware-injected header, fallback to HOME
+  const currentPath = headersList.get('x-current-path') || '/';
+
+  const baseMetadata = constructMetadata(currentPath as Route);
+
+  return {
+    ...baseMetadata,
+    generator: 'WeTranscend',
+    authors: [{ name: 'WeTranscend', url: 'https://x.com/Tod' }],
+    creator: 'WeTranscend',
+    icons: {
+      icon: [
+        {
+          url: '/logo.png',
+          type: 'image/png',
+        },
+      ],
+      apple: '/logo.png',
+    },
+    manifest: '/manifest.json',
+  };
+}
 
 export const viewport: Viewport = {
   themeColor: '#09090b',

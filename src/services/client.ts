@@ -29,7 +29,7 @@ export class BaseApiClient {
     this.config = config;
     this.instance = axios.create({
       baseURL: config.baseURL || BACKEND_BASE_URL,
-      timeout: 30000,
+      timeout: 60000,
       headers: {
         'Content-Type': 'application/json',
       },
@@ -37,15 +37,19 @@ export class BaseApiClient {
 
     // Configure retry logic
     axiosRetry(this.instance, {
-      retries: 3,
+      retries: 2, // User requested 2 retries
       retryDelay: axiosRetry.exponentialDelay,
       shouldResetTimeout: true,
       retryCondition: (error) => {
+        const status = error.response?.status;
+        const data = error.response?.data as any;
+
         // Retry on network errors or 5xx status codes
-        // Don't retry 4xx errors as they are likely client issues
+        // Also retry on specific custom error code 999 (Internal Server Error)
         return (
           axiosRetry.isNetworkOrIdempotentRequestError(error) ||
-          (error.response?.status ? error.response.status >= 500 : false)
+          (status ? status >= 500 : false) ||
+          data?.code === 999
         );
       },
     });
@@ -108,7 +112,7 @@ export class BaseApiClient {
           error.message ||
           'API request failed';
 
-        if (!originalRequest.disableToast) {
+        if (originalRequest && !originalRequest.disableToast) {
           toast.error(message);
         }
 

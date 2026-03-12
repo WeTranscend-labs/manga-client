@@ -11,7 +11,7 @@ export const StudioStepNumber = ({
 }: StudioStepNumberProps) => {
   return (
     <div
-      className={`w-8 h-8 rounded-full bg-linear-to-br from-amber-400 to-amber-600 text-black font-bold text-sm flex items-center justify-center shrink-0 shadow-lg shadow-amber-500/30 ring-2 ring-amber-500/20 ${className}`}
+      className={`w-5 h-5 rounded text-[10px] font-bold flex items-center justify-center shrink-0 bg-amber-500/10 border border-amber-500/20 text-amber-500 shadow-sm ${className}`}
     >
       {number}
     </div>

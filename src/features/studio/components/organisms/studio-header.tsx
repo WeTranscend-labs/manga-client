@@ -11,6 +11,7 @@ import {
 import { IconButton } from '@/components/ui/icon-button';
 import { Logo } from '@/components/ui/logo';
 import { PreviewButton } from '@/components/ui/preview-button';
+import { UserProfileBlock } from '@/components/ui/user-profile-block';
 import { Route } from '@/constants';
 import { useUser } from '@/hooks/use-auth';
 import { authStore } from '@/stores/auth.store';
@@ -191,34 +192,12 @@ export const StudioHeader = () => {
             className="w-56 bg-zinc-950 border-zinc-800 text-zinc-200 font-mono rounded-xl p-0 overflow-hidden"
           >
             <div className="flex flex-col p-1">
-              <div
-                className="px-2 py-2 flex items-center gap-2 cursor-pointer hover:bg-zinc-800/50 rounded-md transition-colors mx-1 mt-1"
+              <UserProfileBlock
+                avatar={profile?.avatar}
+                name={profile?.displayName}
+                username={profile?.username}
                 onClick={() => router.push(formatUrl(Route.PROFILE))}
-              >
-                <Avatar className="h-8 w-8 shrink-0">
-                  <AvatarImage
-                    src={profile?.avatar}
-                    alt={profile?.displayName || profile?.username}
-                  />
-                  <AvatarFallback className="bg-zinc-800 text-zinc-300 font-medium text-xs">
-                    {profile
-                      ? (profile.displayName || profile.username || 'U')
-                          .substring(0, 2)
-                          .toUpperCase()
-                      : 'U'}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex flex-col overflow-hidden">
-                  <p className="text-sm font-medium text-zinc-200 truncate leading-tight">
-                    {profile?.displayName || profile?.username || 'User'}
-                  </p>
-                  {profile?.username && (
-                    <p className="text-xs text-zinc-500 truncate mt-0.5">
-                      @{profile.username}
-                    </p>
-                  )}
-                </div>
-              </div>
+              />
 
               <DropdownMenuSeparator className="bg-zinc-800/80 my-1 mx-1" />
 

@@ -6,6 +6,7 @@ import {
   MangaSession,
 } from '@/types';
 import { normalizeSession, safeArray } from '@/utils/react-utils';
+import { debounce } from '@/utils/utils';
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 
@@ -98,6 +99,14 @@ export const useProjectsStore = create<ProjectsState>()(
     persist(
       (set, get) => ({
         ...initialState,
+
+        // Stable debounced saver
+        _debouncedSaveSession: debounce(
+          (projectId: string, session: MangaSession) => {
+            storageService.saveSession(projectId, session).catch(console.error);
+          },
+          1000,
+        ),
 
         // Sync actions
         setCurrentProject: (project) => set({ currentProject: project }),
@@ -272,9 +281,10 @@ export const useProjectsStore = create<ProjectsState>()(
             }));
 
             if (currentProject?.id) {
-              storageService
-                .saveSession(currentProject.id, updatedSession)
-                .catch(console.error);
+              (get() as any)._debouncedSaveSession(
+                currentProject.id,
+                updatedSession,
+              );
             }
           }
         },
@@ -299,9 +309,10 @@ export const useProjectsStore = create<ProjectsState>()(
                 : null,
             }));
             if (currentProject?.id) {
-              storageService
-                .saveSession(currentProject.id, updatedSession)
-                .catch(console.error);
+              (get() as any)._debouncedSaveSession(
+                currentProject.id,
+                updatedSession,
+              );
             }
           }
         },
